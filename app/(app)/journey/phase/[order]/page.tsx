@@ -4,7 +4,7 @@ import { ArrowLeft, Check } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
 import { PHASES } from "@/lib/config";
 import { requireOnboardedUser } from "@/lib/session";
-import { currentDay, dayStatus } from "@/lib/program";
+import { getProgramState } from "@/lib/program";
 
 export default async function PhaseDetailPage({
   params,
@@ -16,10 +16,10 @@ export default async function PhaseDetailPage({
   if (!phase) notFound();
 
   const user = await requireOnboardedUser();
-  const today = currentDay(user);
+  const state = await getProgramState(user);
   const days = Array.from({ length: phase.dayEnd - phase.dayStart + 1 }, (_, i) => {
     const dayNumber = phase.dayStart + i;
-    return { dayNumber, status: dayStatus(dayNumber, today) };
+    return { dayNumber, status: state.statusFor(dayNumber) };
   });
   const done = days.filter((d) => d.status === "completed").length;
 
@@ -64,7 +64,13 @@ export default async function PhaseDetailPage({
               </span>
               <span className="flex-1 font-medium text-[var(--color-ink)]">Day {d.dayNumber}</span>
               <span className="text-sm text-[var(--color-ink-muted)]">
-                {d.status === "completed" ? "Done" : d.status === "today" ? "Today" : "Upcoming"}
+                {d.status === "completed"
+                  ? "Done"
+                  : d.status === "today"
+                    ? "Today"
+                    : d.status === "available"
+                      ? "Open"
+                      : "Upcoming"}
               </span>
             </Card>
           );

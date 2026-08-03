@@ -10,7 +10,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
 import { requireOnboardedUser } from "@/lib/session";
-import { currentDay } from "@/lib/program";
+import { getProgramState } from "@/lib/program";
 import { phaseForDay, getConfig } from "@/lib/config";
 import { SignOutRow } from "@/components/app/sign-out";
 
@@ -52,7 +52,8 @@ const PLAN_LABEL: Record<string, string> = {
 export default async function ProfilePage() {
   const user = await requireOnboardedUser();
   const config = await getConfig();
-  const today = currentDay(user);
+  const state = await getProgramState(user);
+  const today = state.resumeDay;
   const phase = phaseForDay(today);
   const name = user.displayName ?? user.name ?? "You";
 

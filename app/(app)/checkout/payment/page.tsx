@@ -3,6 +3,7 @@ import { ArrowLeft, LockKey, ShieldCheck } from "@phosphor-icons/react/dist/ssr"
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getConfig } from "@/lib/config";
+import { PayButton } from "@/components/app/pay-button";
 
 /*
   Checkout (D58). Razorpay is the gateway — its own modal handles UPI / card /
@@ -65,11 +66,7 @@ export default async function CheckoutPage() {
         <p className="flex items-center gap-1.5 text-sm text-[var(--color-ink-faint)]">
           <LockKey size={14} /> Secured &amp; encrypted · no auto-renewal
         </p>
-        <Link href="/checkout/confirmed">
-          <Button variant="primary" size="lg">
-            Pay ₹{config.programPriceInr}
-          </Button>
-        </Link>
+        <PayButton amountInr={config.programPriceInr} />
       </div>
     </div>
   );

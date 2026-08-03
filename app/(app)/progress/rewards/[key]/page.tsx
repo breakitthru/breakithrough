@@ -1,17 +1,24 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ui/button";
-import { rewards } from "@/lib/content";
+import { prisma } from "@/lib/prisma";
 import { requireOnboardedUser } from "@/lib/session";
 
-// Redemption confirmation. NOTE: recording the redemption + deducting points is
-// a follow-up (needs the ₹-per-point decision + fulfilment flow). Display only.
+// Confirmation for a real redemption. If the user hasn't actually redeemed this
+// reward, send them back to the shop (no fake confirmations).
 export default async function RedeemPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;
-  const reward = rewards.find((r) => r.key === key);
-  if (!reward) notFound();
   const user = await requireOnboardedUser();
+
+  const reward = await prisma.reward.findUnique({ where: { key } });
+  if (!reward) notFound();
+
+  const redemption = await prisma.redemption.findFirst({
+    where: { userId: user.id, rewardId: reward.id },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!redemption) redirect("/progress/rewards");
 
   return (
     <div className="mx-auto flex min-h-[70dvh] max-w-[520px] flex-col items-center justify-center text-center">
@@ -23,8 +30,8 @@ export default async function RedeemPage({ params }: { params: Promise<{ key: st
         {reward.title} is yours.
       </h1>
       <p className="mt-3 text-[var(--color-ink-muted)]">
-        {reward.pointsCost} points · {Math.max(0, user.pointsBalance - reward.pointsCost)} left. We&rsquo;ll
-        send it to your email, or post it if it&rsquo;s a physical reward.
+        {redemption.pointsSpent} points spent · {user.pointsBalance} left. We&rsquo;ll send it to your
+        email, or post it if it&rsquo;s a physical reward.
       </p>
       <Link href="/progress/rewards" className="mt-8">
         <Button variant="primary">Back to shop</Button>

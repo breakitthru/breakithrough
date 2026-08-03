@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft, Phone } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
-import { helplines } from "@/lib/content";
+import { getHelplines } from "@/lib/program";
 
-export default function HelplinesPage() {
+export default async function HelplinesPage() {
+  const helplines = await getHelplines();
   return (
     <div>
       <Link

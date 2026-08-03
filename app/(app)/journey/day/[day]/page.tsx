@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Play, Circle, CheckCircle, CaretLeft, CaretRight, Lock } from "@phosphor-icons/react/dist/ssr";
+import { redirect } from "next/navigation";
 import { getConfig } from "@/lib/config";
 import { requireOnboardedUser } from "@/lib/session";
-import { currentDay, getDayView } from "@/lib/program";
+import { getProgramState, getDayView } from "@/lib/program";
 
 function categoryLabel(c: string) {
   return c[0] + c.slice(1).toLowerCase();
@@ -16,9 +17,13 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
   if (!Number.isInteger(dayNumber) || dayNumber < 1 || dayNumber > config.programDays) notFound();
 
   const user = await requireOnboardedUser();
-  const today = currentDay(user);
+  const state = await getProgramState(user);
+  const today = state.resumeDay;
 
-  if (dayNumber > today) {
+  // Paywall: trial days are open; later days need a paid plan.
+  if (!state.isAccessible(dayNumber)) redirect("/trial/ended");
+
+  if (dayNumber > state.unlockedDay) {
     return (
       <div className="mx-auto flex min-h-[60dvh] max-w-[560px] flex-col items-center justify-center text-center">
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-surface-sunken)] text-[var(--color-ink-faint)]">
@@ -26,7 +31,8 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
         </span>
         <h1 className="font-display mt-6 text-3xl text-[var(--color-ink)]">Not yet.</h1>
         <p className="mt-2 text-[var(--color-ink-muted)]">
-          Day {dayNumber} unlocks in {dayNumber - today} day{dayNumber - today > 1 ? "s" : ""}. One at a time.
+          Day {dayNumber} unlocks in {dayNumber - state.unlockedDay} day
+          {dayNumber - state.unlockedDay > 1 ? "s" : ""}. One at a time.
         </p>
         <Link href="/journey" className="mt-6 text-sm text-[var(--color-accent)] hover:underline">
           Back to your journey
@@ -143,7 +149,7 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
             ) : (
               <span />
             )}
-            {dayNumber < today ? (
+            {dayNumber < state.unlockedDay ? (
               <Link
                 href={`/journey/day/${dayNumber + 1}`}
                 className="flex items-center gap-2 text-right text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"

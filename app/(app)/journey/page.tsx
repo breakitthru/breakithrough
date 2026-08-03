@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Check, Flag } from "@phosphor-icons/react/dist/ssr";
 import { Chip } from "@/components/ui/card";
 import { requireOnboardedUser } from "@/lib/session";
-import { currentDay, getJourney, type DayStatus } from "@/lib/program";
+import { getProgramState, type DayStatus } from "@/lib/program";
 import { phaseForDay, PHASES } from "@/lib/config";
 
 const WAVE = [0, 70, 100, 70, 0, -70, -100, -70];
@@ -10,6 +10,7 @@ const WAVE = [0, 70, 100, 70, 0, -70, -100, -70];
 function DayNode({ day, status }: { day: number; status: DayStatus }) {
   const isToday = status === "today";
   const isDone = status === "completed";
+  const isAvailable = status === "available";
   return (
     <div className="flex items-center gap-3">
       <div
@@ -19,10 +20,12 @@ function DayNode({ day, status }: { day: number; status: DayStatus }) {
             ? "h-16 w-16 bg-[var(--color-accent)] text-[var(--color-accent-fg)] text-lg ring-4 ring-[var(--color-accent-subtle)]"
             : isDone
               ? "h-11 w-11 bg-[var(--color-brand-ink)] text-white text-sm"
-              : "h-11 w-11 border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-faint)] text-sm",
+              : isAvailable
+                ? "h-11 w-11 border-2 border-[var(--color-accent)] bg-[var(--color-surface)] text-[var(--color-accent-subtle-ink)] text-sm"
+                : "h-11 w-11 border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-faint)] text-sm",
         ].join(" ")}
       >
-        {day}
+        {isDone ? <Check size={18} weight="bold" /> : day}
       </div>
       {isToday && (
         <span className="rounded-[var(--radius-pill)] bg-[var(--color-accent-subtle)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-accent-subtle-ink)]">
@@ -35,12 +38,14 @@ function DayNode({ day, status }: { day: number; status: DayStatus }) {
 
 export default async function JourneyPage() {
   const user = await requireOnboardedUser();
-  const today = currentDay(user);
-  const currentPhase = phaseForDay(today);
-  const journey = getJourney(today);
-  const focus = journey.find((p) => p.order === currentPhase.order)!;
+  const state = await getProgramState(user);
+  const currentPhase = phaseForDay(state.resumeDay);
   const prevPhase = PHASES.find((p) => p.order === currentPhase.order - 1);
   const nextPhase = PHASES.find((p) => p.order === currentPhase.order + 1);
+  const focusDays = Array.from(
+    { length: currentPhase.dayEnd - currentPhase.dayStart + 1 },
+    (_, i) => currentPhase.dayStart + i,
+  );
 
   return (
     <div className="mx-auto max-w-[760px]">
@@ -52,7 +57,7 @@ export default async function JourneyPage() {
           <h1 className="font-display text-[2.75rem] leading-tight text-[var(--color-ink)]">
             {currentPhase.name}
           </h1>
-          <Chip tone="accent">Day {today}</Chip>
+          <Chip tone="accent">Day {state.resumeDay}</Chip>
         </div>
       </header>
 
@@ -67,29 +72,32 @@ export default async function JourneyPage() {
       )}
 
       <div className="flex flex-col items-center">
-        {focus.days.map((d, i) => (
-          <div key={d.dayNumber} className="flex flex-col items-center">
-            <div style={{ transform: `translateX(${WAVE[i % WAVE.length]}px)` }}>
-              {d.status === "upcoming" ? (
-                <DayNode day={d.dayNumber} status={d.status} />
-              ) : (
-                <Link href={`/journey/day/${d.dayNumber}`}>
-                  <DayNode day={d.dayNumber} status={d.status} />
-                </Link>
+        {focusDays.map((dayNumber, i) => {
+          const status = state.statusFor(dayNumber);
+          return (
+            <div key={dayNumber} className="flex flex-col items-center">
+              <div style={{ transform: `translateX(${WAVE[i % WAVE.length]}px)` }}>
+                {status === "upcoming" ? (
+                  <DayNode day={dayNumber} status={status} />
+                ) : (
+                  <Link href={`/journey/day/${dayNumber}`}>
+                    <DayNode day={dayNumber} status={status} />
+                  </Link>
+                )}
+              </div>
+              {i < focusDays.length - 1 && (
+                <div
+                  className="my-2 flex flex-col items-center gap-1.5"
+                  style={{ transform: `translateX(${(WAVE[i % WAVE.length] + WAVE[(i + 1) % WAVE.length]) / 2}px)` }}
+                >
+                  {[0, 1, 2].map((k) => (
+                    <span key={k} className="h-1 w-1 rounded-full bg-[var(--color-line-strong)]" />
+                  ))}
+                </div>
               )}
             </div>
-            {i < focus.days.length - 1 && (
-              <div
-                className="my-2 flex flex-col items-center gap-1.5"
-                style={{ transform: `translateX(${(WAVE[i % WAVE.length] + WAVE[(i + 1) % WAVE.length]) / 2}px)` }}
-              >
-                {[0, 1, 2].map((k) => (
-                  <span key={k} className="h-1 w-1 rounded-full bg-[var(--color-line-strong)]" />
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {nextPhase && (

@@ -13,6 +13,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import { CONFIG_DEFAULTS, PHASES } from "../lib/config";
+import { BADGE_DEFS } from "../lib/badge-defs";
 
 const prisma = new PrismaClient();
 
@@ -113,13 +114,19 @@ async function main() {
     await prisma.reward.upsert({ where: { key: r.key }, update: r, create: r });
   }
 
-  // ── Badges (12 placeholder) ──
-  for (let i = 1; i <= 12; i++) {
-    const key = `badge-${i}`;
+  // ── Badges (real names + award criteria) ──
+  for (let i = 0; i < BADGE_DEFS.length; i++) {
+    const def = BADGE_DEFS[i];
+    const data = {
+      name: def.name,
+      description: def.description,
+      criteria: def.criteria as object,
+      order: i + 1,
+    };
     await prisma.badge.upsert({
-      where: { key },
-      update: {},
-      create: { key, name: `Badge ${i}`, description: "Placeholder badge description.", order: i },
+      where: { key: def.key },
+      update: data,
+      create: { key: def.key, ...data },
     });
   }
 

@@ -1,18 +1,18 @@
 import Link from "next/link";
-import { ArrowLeft, Gift, Lock } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, Gift, Lock, Medal } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
-import { badges } from "@/lib/content";
 import { requireOnboardedUser } from "@/lib/session";
-import { currentDay, reflectionCount } from "@/lib/program";
+import { getProgramState, reflectionCount, getBadgesWithEarned } from "@/lib/program";
 import { getConfig } from "@/lib/config";
 
 export default async function ProgressPage() {
   const user = await requireOnboardedUser();
   const config = await getConfig();
-  const today = currentDay(user);
+  const state = await getProgramState(user);
+  const today = state.resumeDay;
   const reflections = await reflectionCount(user.id);
-  // Badge auto-awarding isn't wired yet — a fresh account shows them locked.
-  const earned = 0;
+  const badges = await getBadgesWithEarned(user.id);
+  const earned = badges.filter((b) => b.earned).length;
   const preview = badges.slice(0, 4);
 
   return (
@@ -74,8 +74,14 @@ export default async function ProgressPage() {
         <div className="mt-4 grid grid-cols-4 gap-4">
           {preview.map((b) => (
             <div key={b.id} className="flex flex-col items-center gap-2 text-center">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[var(--color-line-strong)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-faint)]">
-                <Lock size={22} />
+              <span
+                className={`flex h-16 w-16 items-center justify-center rounded-full border-2 ${
+                  b.earned
+                    ? "border-[var(--color-accent)] text-[var(--color-accent)]"
+                    : "border-[var(--color-line-strong)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-faint)]"
+                }`}
+              >
+                {b.earned ? <Medal size={26} weight="fill" /> : <Lock size={22} />}
               </span>
               <span className="text-xs text-[var(--color-ink-muted)]">{b.name}</span>
             </div>

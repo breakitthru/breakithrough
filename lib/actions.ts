@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
-import { currentDay } from "@/lib/program";
+import { getProgramState } from "@/lib/program";
+import { awardBadges } from "@/lib/badges";
 import { CONFIG_DEFAULTS } from "@/lib/config";
 
 // ── Onboarding persistence ──────────────────────────────────────────
@@ -74,9 +75,12 @@ export async function completeTask(taskId: string, response?: string) {
   });
   if (!task) return { ok: false as const, error: "Task not found" };
 
-  const today = currentDay(user);
-  if (task.day.dayNumber > today) {
+  const state = await getProgramState(user);
+  if (task.day.dayNumber > state.unlockedDay) {
     return { ok: false as const, error: "This day isn't unlocked yet" };
+  }
+  if (!state.isAccessible(task.day.dayNumber)) {
+    return { ok: false as const, error: "This day is behind the paywall" };
   }
 
   const existing = await prisma.taskCompletion.findUnique({
@@ -141,6 +145,8 @@ export async function completeTask(taskId: string, response?: string) {
     });
   });
 
+  await awardBadges(user.id);
+
   revalidatePath("/today");
   revalidatePath(`/journey/day/${task.day.dayNumber}`);
   revalidatePath("/journey");
@@ -154,15 +160,73 @@ export async function saveReflection(input: { dayNumber?: number; prompt?: strin
   const body = input.body.trim();
   if (!body) return { ok: false as const, error: "Nothing to save" };
 
+  const state = await getProgramState(user);
   await prisma.reflection.create({
     data: {
       userId: user.id,
-      dayNumber: input.dayNumber ?? currentDay(user),
+      dayNumber: input.dayNumber ?? state.resumeDay,
       prompt: input.prompt,
       body,
     },
   });
+  await awardBadges(user.id);
   revalidatePath("/reflections");
   revalidatePath("/progress");
   redirect("/reflections");
+}
+
+// ── Rewards & payments ──────────────────────────────────────────────
+
+/** Redeem a reward: check balance, deduct points atomically, record it. */
+export async function redeemReward(rewardId: string) {
+  const user = await requireUser();
+  const reward = await prisma.reward.findUnique({ where: { id: rewardId } });
+  if (!reward || !reward.active) return { ok: false as const, error: "Reward unavailable" };
+  if (user.pointsBalance < reward.pointsCost) {
+    return { ok: false as const, error: "Not enough points yet" };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    // Re-check balance inside the transaction to avoid a double-spend race.
+    const fresh = await tx.user.findUniqueOrThrow({ where: { id: user.id } });
+    if (fresh.pointsBalance < reward.pointsCost) throw new Error("insufficient");
+    await tx.redemption.create({
+      data: { userId: user.id, rewardId, pointsSpent: reward.pointsCost, status: "REQUESTED" },
+    });
+    await tx.pointsLedger.create({
+      data: { userId: user.id, delta: -reward.pointsCost, reason: "REDEMPTION", refId: rewardId },
+    });
+    await tx.user.update({
+      where: { id: user.id },
+      data: { pointsBalance: { decrement: reward.pointsCost } },
+    });
+  });
+
+  revalidatePath("/progress");
+  revalidatePath("/progress/rewards");
+  return { ok: true as const, key: reward.key };
+}
+
+/**
+ * Placeholder payment. Marks the account paid so the paywall flow is testable
+ * end to end. MUST be replaced by verified Razorpay payment before launch.
+ */
+export async function completePaymentStub() {
+  const user = await requireUser();
+  if (user.plan !== "ACTIVE" && user.plan !== "COMPLETED") {
+    const config = await getConfigInline();
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: user.id }, data: { plan: "ACTIVE", paidAt: new Date() } }),
+      prisma.payment.create({
+        data: { userId: user.id, amountInr: config.programPriceInr, status: "PAID" },
+      }),
+    ]);
+  }
+  revalidatePath("/today");
+  redirect("/checkout/confirmed");
+}
+
+async function getConfigInline() {
+  const { getConfig } = await import("@/lib/config");
+  return getConfig();
 }

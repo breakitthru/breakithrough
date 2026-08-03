@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Play } from "@phosphor-icons/react/dist/ssr";
 import { Chip } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireOnboardedUser } from "@/lib/session";
-import { currentDay } from "@/lib/program";
+import { getProgramState } from "@/lib/program";
 import { TaskComplete } from "@/components/app/task-complete";
 
 function categoryLabel(c: string) {
@@ -25,7 +26,9 @@ export default async function TaskPage({
     include: { day: true, videos: true },
   });
   if (!task || task.day.dayNumber !== dayNumber) notFound();
-  if (task.day.dayNumber > currentDay(user)) notFound();
+  const state = await getProgramState(user);
+  if (!state.isAccessible(dayNumber)) redirect("/trial/ended");
+  if (task.day.dayNumber > state.unlockedDay) notFound();
 
   const completion = await prisma.taskCompletion.findUnique({
     where: { userId_taskId: { userId: user.id, taskId } },

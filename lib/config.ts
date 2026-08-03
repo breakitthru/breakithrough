@@ -22,12 +22,18 @@ export const CONFIG_DEFAULTS = {
 export type AppConfig = typeof CONFIG_DEFAULTS;
 
 /**
- * Returns merged config. For now returns defaults (no live DB); later this reads
- * SiteConfig rows and merges them over the defaults so admin edits take effect.
+ * Merged config: SiteConfig rows (admin-editable) layered over the defaults.
+ * Falls back to defaults if the DB is unreachable, so pages never hard-fail on it.
  */
 export async function getConfig(): Promise<AppConfig> {
-  // TODO: when DB + admin land, merge SiteConfig overrides here.
-  return CONFIG_DEFAULTS;
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    const rows = await prisma.siteConfig.findMany();
+    const overrides = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+    return { ...CONFIG_DEFAULTS, ...overrides } as AppConfig;
+  } catch {
+    return CONFIG_DEFAULTS;
+  }
 }
 
 /** The four fixed phases, harvested from the shipped design. Do not rename. */

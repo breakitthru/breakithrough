@@ -11,9 +11,10 @@ import {
   Smiley,
   SmileyWink,
 } from "@phosphor-icons/react/dist/ssr";
+import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { requireOnboardedUser } from "@/lib/session";
-import { currentDay, getDayView } from "@/lib/program";
+import { getProgramState, getDayView } from "@/lib/program";
 import { getConfig } from "@/lib/config";
 
 function greeting(hour: number) {
@@ -29,7 +30,10 @@ function categoryLabel(c: string) {
 export default async function TodayPage() {
   const user = await requireOnboardedUser();
   const config = await getConfig();
-  const today = currentDay(user);
+  const state = await getProgramState(user);
+  // Trial wall: if the resume day is past the free trial and unpaid, show the wall.
+  if (state.walled) redirect("/trial/ended");
+  const today = state.resumeDay;
   const day = await getDayView(user.id, today);
   const name = user.displayName ?? user.name ?? "there";
   const now = new Date();

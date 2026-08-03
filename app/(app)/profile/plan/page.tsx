@@ -4,12 +4,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getConfig } from "@/lib/config";
 import { requireOnboardedUser } from "@/lib/session";
-import { currentDay } from "@/lib/program";
+import { getProgramState } from "@/lib/program";
 
 export default async function PlanPage() {
   const user = await requireOnboardedUser();
   const config = await getConfig();
-  const today = currentDay(user);
+  const state = await getProgramState(user);
+  const today = state.resumeDay;
   const isPaid = user.plan === "ACTIVE" || user.plan === "COMPLETED";
 
   return (

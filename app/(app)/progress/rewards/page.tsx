@@ -8,8 +8,9 @@ import {
   Lock,
 } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
-import { rewards } from "@/lib/content";
 import { requireOnboardedUser } from "@/lib/session";
+import { getRewards } from "@/lib/program";
+import { RedeemButton } from "@/components/app/redeem-button";
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; weight?: "fill" }>> = {
   "sleep-stories": Gift,
@@ -22,6 +23,7 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; weight?: "fill"
 export default async function RewardsPage() {
   const user = await requireOnboardedUser();
   const balance = user.pointsBalance;
+  const rewards = await getRewards();
   const featured = rewards.find((r) => r.featured);
   const rest = rewards.filter((r) => !r.featured);
 
@@ -52,17 +54,11 @@ export default async function RewardsPage() {
             <h3 className="mt-1 text-lg font-semibold text-[var(--color-ink)]">{featured.title}</h3>
             <p className="text-sm text-[var(--color-ink-muted)]">{featured.description}</p>
           </div>
-          {balance >= featured.pointsCost ? (
-            <Link href={`/progress/rewards/${featured.key}`}>
-              <button className="rounded-[var(--radius-pill)] bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-[var(--color-accent-fg)] hover:bg-[var(--color-accent-hover)]">
-                Redeem · {featured.pointsCost} points
-              </button>
-            </Link>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-[var(--color-surface-sunken)] px-4 py-2.5 text-sm text-[var(--color-ink-muted)]">
-              <Lock size={14} /> {featured.pointsCost} points
-            </span>
-          )}
+          <RedeemButton
+            rewardId={featured.id}
+            pointsCost={featured.pointsCost}
+            affordable={balance >= featured.pointsCost}
+          />
         </Card>
       )}
 
@@ -72,16 +68,20 @@ export default async function RewardsPage() {
           const Icon = ICONS[r.key] ?? Gift;
           const affordable = balance >= r.pointsCost;
           return (
-            <Card key={r.id} className={`p-5 ${affordable ? "" : "opacity-60"}`}>
+            <Card key={r.id} className={`flex flex-col p-5 ${affordable ? "" : "opacity-60"}`}>
               <span className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-muted)]">
                 <Icon size={22} />
               </span>
               <h3 className="mt-3 font-semibold text-[var(--color-ink)]">{r.title}</h3>
               <p className="text-sm text-[var(--color-ink-muted)]">{r.description}</p>
-              <div className="mt-3 text-sm">
-                <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-muted)]">
-                  <Lock size={14} /> {r.pointsCost} points
-                </span>
+              <div className="mt-3">
+                {affordable ? (
+                  <RedeemButton rewardId={r.id} pointsCost={r.pointsCost} affordable />
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)]">
+                    <Lock size={14} /> {r.pointsCost} points
+                  </span>
+                )}
               </div>
             </Card>
           );
