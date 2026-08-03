@@ -1,0 +1,436 @@
+// Break It Through — database schema.
+// Designed data-driven end to end: program content, points, rewards, helplines
+// and tunables all live in tables so a future admin panel can edit everything
+// without code changes. Nothing user-facing should be hardcoded.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Auth / identity  (Auth.js Prisma adapter + JWT sessions)
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PlanStatus {
+  TRIAL // days 1-4, no card taken
+  ACTIVE // paid the ₹999 one-time
+  EXPIRED // trial ended, unpaid
+  COMPLETED // reached day 60
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+
+  role        Role    @default(USER)
+  displayName String?
+  avatarKey   String? // selected avatar (Cloudflare/R2 key or preset id)
+
+  // ── Onboarding / intake ──
+  onboardedAt     DateTime?
+  intake          Json? // questionnaire answers (stored, not scored in v1)
+  whyIStarted     String? // read back to the user inside the SOS flow
+  trustedName     String? // trusted contact — used as a tel: button in SOS
+  trustedPhone    String?
+
+  // ── Program state ──
+  plan             PlanStatus @default(TRIAL)
+  programStartDate DateTime? // day-locking anchor: day n unlocks start + (n-1)
+  trialStartedAt   DateTime?
+  paidAt           DateTime?
+  completedAt      DateTime?
+
+  // ── Gamification (ledger is authoritative; these are fast-read caches) ──
+  pointsBalance     Int       @default(0)
+  streakCurrent     Int       @default(0)
+  streakLongest     Int       @default(0)
+  lastCompletedDay  Int? // program day number of last completion
+
+  accounts        Account[]
+  sessions        Session[]
+  completions     TaskCompletion[]
+  points          PointsLedger[]
+  badges          UserBadge[]
+  reflections     Reflection[]
+  consent         Consent?
+  sosEvents       SosEvent[]
+  redemptions     Redemption[]
+  payments        Payment[]
+  chatMessages    ChatMessage[]
+  notifications   Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Site configuration — one row per tunable, admin-editable.
+//  Read via lib/config.getConfig(). e.g. pointsPerTask, programPriceInr,
+//  rupeePerPoint, trialDays, dayRolloverHour.
+// ─────────────────────────────────────────────────────────────
+
+model SiteConfig {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Program content — the 60-day course (all admin-authored later)
+// ─────────────────────────────────────────────────────────────
+
+model Phase {
+  id       String @id @default(cuid())
+  order    Int // 1..4
+  name     String // e.g. "Feeling the feelings"
+  dayStart Int
+  dayEnd   Int
+  days     Day[]
+
+  @@unique([order])
+}
+
+model Day {
+  id         String  @id @default(cuid())
+  dayNumber  Int // 1..60
+  phaseId    String
+  phase      Phase   @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  title      String? // e.g. "Day 12"
+  isMilestone Boolean @default(false)
+
+  tasks  Task[]
+  videos Video[]
+
+  @@unique([dayNumber])
+  @@index([phaseId])
+}
+
+enum TaskCategory {
+  MENTAL
+  PHYSICAL
+  REFLECTION
+  PRACTICE
+  CONNECTION
+}
+
+enum ResponseType {
+  NONE // just mark complete
+  WRITTEN // short reflection field
+  TIMER // simple timer
+  TAP // "tap when done"
+}
+
+model Task {
+  id               String       @id @default(cuid())
+  dayId            String
+  day              Day          @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  order            Int
+  title            String
+  category         TaskCategory @default(PRACTICE)
+  whyItMatters     String? // one short paragraph from the clinician
+  estimatedMinutes Int          @default(5)
+  points           Int          @default(1) // per-task, configurable
+  mandatory        Boolean      @default(true)
+  responseType     ResponseType @default(NONE)
+
+  videos      Video[]
+  completions TaskCompletion[]
+
+  @@index([dayId])
+}
+
+model Video {
+  id          String  @id @default(cuid())
+  dayId       String
+  day         Day     @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  taskId      String? // null = day-level "watch first" video
+  task        Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  order       Int     @default(0)
+  title       String
+  streamUid   String? // Cloudflare Stream id — null shows a blank player for now
+  posterKey   String? // 9:16 poster (R2 key)
+  durationSec Int?
+
+  @@index([dayId])
+  @@index([taskId])
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Progress / gamification
+// ─────────────────────────────────────────────────────────────
+
+model TaskCompletion {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  response    Json? // written reflection / timer result, when the task asks for it
+  completedAt DateTime @default(now())
+
+  @@unique([userId, taskId])
+  @@index([userId])
+}
+
+enum PointsReason {
+  TASK
+  DAY_BONUS // all mandatory tasks in a day
+  SOS_RIDE_OUT // max 1/day
+  REFLECTION // max 1/day
+  REDEMPTION // negative delta
+  ADJUSTMENT // admin correction
+}
+
+model PointsLedger {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  delta     Int
+  reason    PointsReason
+  refId     String? // task id, day number, redemption id, etc.
+  note      String?
+  createdAt DateTime     @default(now())
+
+  @@index([userId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  key         String      @unique
+  name        String
+  description String
+  iconKey     String?
+  criteria    Json? // machine-readable rule (e.g. { type: "days", n: 30 })
+  order       Int         @default(0)
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Reflections (private journal) — encrypted at rest, no admin reader.
+// ─────────────────────────────────────────────────────────────
+
+model Reflection {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayNumber Int? // program day it was written on
+  prompt    String? // the supplied daily prompt, if any
+  body      String   @db.Text // private content
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Consent {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeJournal       Boolean  @default(false)
+  storeChat          Boolean  @default(false)
+  shareSummaryOnBook Boolean  @default(false)
+  analytics          Boolean  @default(false)
+  updatedAt          DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SOS / safety — works logged-out; every event logged for safety review.
+// ─────────────────────────────────────────────────────────────
+
+enum SosDoor {
+  NOT_SAFE
+  RIDE_OUT
+  TALK
+}
+
+model SosEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  door      SosDoor
+  rodeOut   Boolean  @default(false)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Helpline {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  hours     String?
+  languages String?
+  order     Int      @default(0)
+  region    String?  @default("IN")
+  active    Boolean  @default(true)
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Rewards / economy — points spent here (fulfillment is off-platform).
+// ─────────────────────────────────────────────────────────────
+
+enum RewardKind {
+  DIGITAL
+  DISCOUNT
+  PHYSICAL
+}
+
+model Reward {
+  id          String       @id @default(cuid())
+  key         String       @unique
+  title       String
+  description String?
+  iconKey     String?
+  pointsCost  Int
+  kind        RewardKind   @default(DIGITAL)
+  featured    Boolean      @default(false)
+  active      Boolean      @default(true)
+  order       Int          @default(0)
+  redemptions Redemption[]
+}
+
+enum RedemptionStatus {
+  REQUESTED
+  FULFILLED
+  CANCELLED
+}
+
+model Redemption {
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rewardId   String
+  reward     Reward           @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  pointsSpent Int
+  status     RedemptionStatus @default(REQUESTED)
+  createdAt  DateTime         @default(now())
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Payments — ₹999 one-time (Razorpay wired in a later phase)
+// ─────────────────────────────────────────────────────────────
+
+enum PaymentStatus {
+  CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountInr         Int
+  status            PaymentStatus @default(CREATED)
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  createdAt         DateTime      @default(now())
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Daylight (AI companion) — chat persisted; AI backend stubbed for now.
+// ─────────────────────────────────────────────────────────────
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      ChatRole
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Notifications panel
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // e.g. "reminder", "session", "reward", "system"
+  title     String
+  body      String?
+  actionUrl String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}

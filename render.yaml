@@ -1,0 +1,40 @@
+# Render blueprint for Break It Through.
+# In the Render dashboard: New → Blueprint → connect this repo. Render reads this
+# file and creates the web service. Fill the `sync: false` secrets in the dashboard.
+#
+# Migrations run inside the build command because Render's free tier does not
+# support preDeployCommand. `prisma migrate deploy` is idempotent, so re-running
+# it on every deploy is safe. On a paid plan you can instead move
+# `npx prisma migrate deploy` into a `preDeployCommand` and drop it from build.
+
+services:
+  - type: web
+    name: break-it-through
+    runtime: node
+    region: singapore # closest Render region to India; match Neon's region
+    plan: free
+    branch: main
+    buildCommand: npm install && npx prisma migrate deploy && npm run build
+    startCommand: npm run start
+    healthCheckPath: /login
+    envVars:
+      # Node version (pin to LTS — Render may not have the very latest).
+      - key: NODE_VERSION
+        value: "22"
+      # Neon pooled connection string (app runtime).
+      - key: DATABASE_URL
+        sync: false
+      # Neon direct (unpooled) connection string (Prisma Migrate).
+      - key: DIRECT_URL
+        sync: false
+      # Auth.js session secret — Render generates one for you.
+      - key: AUTH_SECRET
+        generateValue: true
+      # Public base URL of the deployed app, e.g. https://break-it-through.onrender.com
+      - key: AUTH_URL
+        sync: false
+      # Google OAuth (leave blank until you create the OAuth client).
+      - key: AUTH_GOOGLE_ID
+        sync: false
+      - key: AUTH_GOOGLE_SECRET
+        sync: false
