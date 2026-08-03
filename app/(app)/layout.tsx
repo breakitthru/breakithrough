@@ -1,22 +1,25 @@
 import { Sidebar } from "@/components/app/sidebar";
 import { DaylightDock } from "@/components/app/daylight-dock";
-import { demoUser } from "@/lib/mock";
+import { requireOnboardedUser } from "@/lib/session";
 
 /*
-  Authenticated member-app shell (desktop layout).
-  For now it renders against the demo user; once auth + DB are wired this reads
-  the real session user. SOS lives outside this layout so it works logged-out.
+  Authenticated member-app shell (desktop). Requires a signed-in, onboarded user;
+  otherwise redirects to /login or /welcome. SOS lives in its own group so it can
+  be reached without this gate.
 */
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const user = {
-    displayName: demoUser.displayName,
-    avatarInitial: demoUser.avatarInitial,
-    trustedName: demoUser.trustedName,
-  };
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const user = await requireOnboardedUser();
+  const name = user.displayName ?? user.name ?? "there";
 
   return (
     <div className="min-h-dvh bg-[var(--color-canvas)]">
-      <Sidebar user={user} />
+      <Sidebar
+        user={{
+          displayName: name,
+          avatarInitial: name.charAt(0).toUpperCase(),
+          trustedName: user.trustedName,
+        }}
+      />
       <main className="ml-[264px] min-h-dvh">
         <div className="mx-auto w-full max-w-[1180px] px-10 py-10">{children}</div>
       </main>

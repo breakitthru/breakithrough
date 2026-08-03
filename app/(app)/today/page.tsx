@@ -12,7 +12,8 @@ import {
   SmileyWink,
 } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
-import { demoUser, getDay, getTodayProgress } from "@/lib/mock";
+import { requireOnboardedUser } from "@/lib/session";
+import { currentDay, getDayView } from "@/lib/program";
 import { getConfig } from "@/lib/config";
 
 function greeting(hour: number) {
@@ -21,28 +22,35 @@ function greeting(hour: number) {
   return "Good evening";
 }
 
+function categoryLabel(c: string) {
+  return c[0] + c.slice(1).toLowerCase();
+}
+
 export default async function TodayPage() {
+  const user = await requireOnboardedUser();
   const config = await getConfig();
-  const day = getDay(demoUser.currentDay);
-  const progress = getTodayProgress();
+  const today = currentDay(user);
+  const day = await getDayView(user.id, today);
+  const name = user.displayName ?? user.name ?? "there";
   const now = new Date();
   const weekday = now.toLocaleDateString("en-IN", { weekday: "long" }).toUpperCase();
-  const daysToDaylight = config.programDays - demoUser.currentDay;
-  const mandatory = day.tasks.filter((t) => t.mandatory);
-  const optional = day.tasks.filter((t) => !t.mandatory);
-  const headline = mandatory[0];
+  const daysToDaylight = config.programDays - today;
+
+  const mandatory = day?.tasks.filter((t) => t.mandatory) ?? [];
+  const optional = day?.tasks.filter((t) => !t.mandatory) ?? [];
+  const headline = mandatory.find((t) => !t.completed) ?? mandatory[0];
+  const progress = day?.progress ?? { done: 0, total: 0, optionalDone: 0 };
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
-      {/* ── Center column ── */}
       <div className="max-w-[720px]">
         <header className="mb-7 flex items-start justify-between">
           <div>
             <p className="eyebrow">
-              {weekday} · Day {demoUser.currentDay}
+              {weekday} · Day {today}
             </p>
             <h1 className="font-display mt-1 text-[2.5rem] leading-tight text-[var(--color-ink)]">
-              {greeting(now.getHours())}, {demoUser.displayName}.
+              {greeting(now.getHours())}, {name}.
             </h1>
           </div>
           <div className="mt-2 flex items-center gap-4 text-[var(--color-ink-muted)]">
@@ -51,7 +59,7 @@ export default async function TodayPage() {
               className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent)] hover:opacity-80"
             >
               <Trophy size={20} weight="fill" />
-              {demoUser.pointsBalance}
+              {user.pointsBalance}
             </Link>
             <Link href="/notifications" aria-label="Notifications" className="hover:text-[var(--color-ink)]">
               <Bell size={22} />
@@ -63,18 +71,18 @@ export default async function TodayPage() {
         <Link href="/journey" className="block">
           <div className="relative overflow-hidden rounded-[var(--radius-lg)] bg-[var(--color-brand-ink)] p-7 text-[var(--color-brand-fg)] shadow-[var(--shadow-card)]">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/55">
-              Your journey · Phase {day.phaseOrder} of 4
+              Your journey · Phase {day?.phaseOrder ?? 1} of 4
             </p>
-            <h2 className="font-display mt-2 text-[2rem] leading-tight">{day.phaseName}</h2>
+            <h2 className="font-display mt-2 text-[2rem] leading-tight">{day?.phaseName ?? "Steady breath"}</h2>
             <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-white/15">
               <div
                 className="h-full rounded-full bg-[var(--color-accent)]"
-                style={{ width: `${(demoUser.currentDay / config.programDays) * 100}%` }}
+                style={{ width: `${(today / config.programDays) * 100}%` }}
               />
             </div>
             <div className="mt-3 flex items-center justify-between text-sm text-white/70">
               <span>
-                Day {demoUser.currentDay} of {config.programDays}
+                Day {today} of {config.programDays}
               </span>
               <span>{daysToDaylight} days to daylight</span>
             </div>
@@ -82,7 +90,7 @@ export default async function TodayPage() {
         </Link>
 
         {/* Today's tasks entry */}
-        <Link href={`/journey/day/${demoUser.currentDay}`} className="mt-5 block">
+        <Link href={`/journey/day/${today}`} className="mt-5 block">
           <Card className="flex items-center gap-4 p-6 transition-colors hover:border-[var(--color-line-strong)]">
             <div className="flex-1">
               <p className="eyebrow">
@@ -90,13 +98,14 @@ export default async function TodayPage() {
                 {optional.length ? ` · ${optional.length} optional` : ""}
               </p>
               <h3 className="mt-1 text-lg font-semibold text-[var(--color-ink)]">
-                {headline?.title}
+                {headline ? headline.title : "You're all done for today"}
               </h3>
-              <p className="mt-0.5 text-sm text-[var(--color-ink-muted)]">
-                {headline
-                  ? `${headline.category[0] + headline.category.slice(1).toLowerCase()} · ${headline.estimatedMinutes} min · +${headline.points} point`
-                  : null}
-              </p>
+              {headline && (
+                <p className="mt-0.5 text-sm text-[var(--color-ink-muted)]">
+                  {categoryLabel(headline.category)} · {headline.estimatedMinutes} min · +
+                  {headline.points} point
+                </p>
+              )}
             </div>
             <span className="flex items-center gap-1 text-[var(--color-ink-faint)]">
               <DotsThreeOutline size={18} />
@@ -128,13 +137,14 @@ export default async function TodayPage() {
               { Icon: Smiley, label: "Okay" },
               { Icon: SmileyWink, label: "Lighter" },
             ].map(({ Icon, label }) => (
-              <button
+              <Link
                 key={label}
+                href="/reflections/new"
                 className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-line)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
                 aria-label={label}
               >
                 <Icon size={24} />
-              </button>
+              </Link>
             ))}
           </div>
         </Card>
@@ -144,7 +154,7 @@ export default async function TodayPage() {
         </p>
       </div>
 
-      {/* ── Right context rail ── */}
+      {/* Right context rail */}
       <aside className="hidden flex-col gap-4 lg:flex">
         <Link href="/sessions">
           <Card className="p-5 transition-colors hover:border-[var(--color-line-strong)]">

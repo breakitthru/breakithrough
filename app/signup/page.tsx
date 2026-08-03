@@ -3,10 +3,9 @@ import { redirect } from "next/navigation";
 import { isGoogleConfigured } from "@/lib/env";
 import { getCurrentUser } from "@/lib/session";
 import { SplitCanvas } from "@/components/onboarding/split-canvas";
-import { LoginForm } from "@/components/auth/forms";
+import { SignupForm } from "@/components/auth/forms";
 
-export default async function LoginPage() {
-  // Already signed in? Skip the door.
+export default async function SignupPage() {
   const user = await getCurrentUser();
   if (user) redirect(user.onboardedAt ? "/today" : "/welcome/intake/1");
 
@@ -31,18 +30,24 @@ export default async function LoginPage() {
       }}
     >
       <p className="text-right text-sm text-[var(--color-ink-muted)]">
-        New here?{" "}
-        <Link href="/signup" className="font-medium text-[var(--color-ink)] underline-offset-4 hover:underline">
-          Create an account
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-[var(--color-ink)] underline-offset-4 hover:underline">
+          Log in
         </Link>
       </p>
       <h1 className="font-display mt-8 text-[2.5rem] leading-tight text-[var(--color-ink)]">
-        Welcome back.
+        Start your 60 days.
       </h1>
-      <p className="mt-2 text-[var(--color-ink-muted)]">Pick up where you left off.</p>
+      <p className="mt-2 text-[var(--color-ink-muted)]">
+        Four days free — no card, no pressure. Just the first step, whenever you're ready.
+      </p>
       <div className="mt-8">
-        <LoginForm googleEnabled={isGoogleConfigured} />
+        <SignupForm googleEnabled={isGoogleConfigured} />
       </div>
+      <p className="mt-6 text-center text-xs text-[var(--color-ink-faint)]">
+        By continuing, you agree to our <span className="underline">Terms</span> and{" "}
+        <span className="underline">Privacy Policy</span>.
+      </p>
     </SplitCanvas>
   );
 }

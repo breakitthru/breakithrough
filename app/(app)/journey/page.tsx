@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Check, Flag } from "@phosphor-icons/react/dist/ssr";
 import { Chip } from "@/components/ui/card";
-import { demoUser, getJourney, type DayStatus } from "@/lib/mock";
+import { requireOnboardedUser } from "@/lib/session";
+import { currentDay, getJourney, type DayStatus } from "@/lib/program";
 import { phaseForDay, PHASES } from "@/lib/config";
 
-// Serpentine horizontal offsets (px) to give the path its winding feel.
 const WAVE = [0, 70, 100, 70, 0, -70, -100, -70];
 
 function DayNode({ day, status }: { day: number; status: DayStatus }) {
@@ -33,10 +33,11 @@ function DayNode({ day, status }: { day: number; status: DayStatus }) {
   );
 }
 
-export default function JourneyPage() {
-  const currentPhase = phaseForDay(demoUser.currentDay);
-  const journey = getJourney();
-  // Focus the road on the current phase (like the mockup), showing its days.
+export default async function JourneyPage() {
+  const user = await requireOnboardedUser();
+  const today = currentDay(user);
+  const currentPhase = phaseForDay(today);
+  const journey = getJourney(today);
   const focus = journey.find((p) => p.order === currentPhase.order)!;
   const prevPhase = PHASES.find((p) => p.order === currentPhase.order - 1);
   const nextPhase = PHASES.find((p) => p.order === currentPhase.order + 1);
@@ -51,11 +52,10 @@ export default function JourneyPage() {
           <h1 className="font-display text-[2.75rem] leading-tight text-[var(--color-ink)]">
             {currentPhase.name}
           </h1>
-          <Chip tone="accent">Day {demoUser.currentDay}</Chip>
+          <Chip tone="accent">Day {today}</Chip>
         </div>
       </header>
 
-      {/* Previous phase, completed */}
       {prevPhase && (
         <div className="mb-2 flex justify-center">
           <Link href={`/journey/phase/${prevPhase.order}`}>
@@ -66,12 +66,11 @@ export default function JourneyPage() {
         </div>
       )}
 
-      {/* The road */}
       <div className="flex flex-col items-center">
         {focus.days.map((d, i) => (
           <div key={d.dayNumber} className="flex flex-col items-center">
             <div style={{ transform: `translateX(${WAVE[i % WAVE.length]}px)` }}>
-              {d.status === "upcoming" || d.status === "locked" ? (
+              {d.status === "upcoming" ? (
                 <DayNode day={d.dayNumber} status={d.status} />
               ) : (
                 <Link href={`/journey/day/${d.dayNumber}`}>
@@ -79,9 +78,11 @@ export default function JourneyPage() {
                 </Link>
               )}
             </div>
-            {/* dotted connector */}
             {i < focus.days.length - 1 && (
-              <div className="my-2 flex flex-col items-center gap-1.5" style={{ transform: `translateX(${(WAVE[i % WAVE.length] + WAVE[(i + 1) % WAVE.length]) / 2}px)` }}>
+              <div
+                className="my-2 flex flex-col items-center gap-1.5"
+                style={{ transform: `translateX(${(WAVE[i % WAVE.length] + WAVE[(i + 1) % WAVE.length]) / 2}px)` }}
+              >
                 {[0, 1, 2].map((k) => (
                   <span key={k} className="h-1 w-1 rounded-full bg-[var(--color-line-strong)]" />
                 ))}
@@ -91,7 +92,6 @@ export default function JourneyPage() {
         ))}
       </div>
 
-      {/* Next phase, locked */}
       {nextPhase && (
         <div className="mt-8 flex items-center justify-center gap-2 text-sm text-[var(--color-ink-muted)]">
           <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-line-strong)] bg-[var(--color-surface)]">

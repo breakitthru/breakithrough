@@ -43,19 +43,61 @@ async function main() {
     });
   }
 
-  // ── Phases + their days (placeholder tasks/videos come later) ──
+  // ── Phases + their days + placeholder tasks/videos ──
+  // Content is generic ("Task 1", "Video 1"); real content is authored via the
+  // admin panel later. Tasks live in the DB so per-user completions FK to them.
+  const CATEGORIES = ["REFLECTION", "MENTAL", "PHYSICAL", "PRACTICE", "CONNECTION"] as const;
+
   for (const phase of PHASES) {
-    const created = await prisma.phase.upsert({
+    const createdPhase = await prisma.phase.upsert({
       where: { order: phase.order },
       update: { name: phase.name, dayStart: phase.dayStart, dayEnd: phase.dayEnd },
       create: { order: phase.order, name: phase.name, dayStart: phase.dayStart, dayEnd: phase.dayEnd },
     });
+
     for (let d: number = phase.dayStart; d <= phase.dayEnd; d++) {
-      await prisma.day.upsert({
+      const day = await prisma.day.upsert({
         where: { dayNumber: d },
-        update: { phaseId: created.id },
-        create: { dayNumber: d, phaseId: created.id, title: `Day ${d}`, isMilestone: d === CONFIG_DEFAULTS.programDays },
+        update: { phaseId: createdPhase.id },
+        create: {
+          dayNumber: d,
+          phaseId: createdPhase.id,
+          title: `Day ${d}`,
+          isMilestone: d === CONFIG_DEFAULTS.programDays,
+        },
       });
+
+      // Only seed tasks/videos once per day (idempotent guard).
+      const already = await prisma.task.count({ where: { dayId: day.id } });
+      if (already > 0) continue;
+
+      // Day-level "watch first" videos (1-3).
+      const videoCount = (d % 3) + 1;
+      for (let v = 1; v <= videoCount; v++) {
+        await prisma.video.create({
+          data: { dayId: day.id, order: v, title: `Video ${v}`, durationSec: 0 },
+        });
+      }
+
+      // 3 mandatory ("essentials") + 1-2 optional.
+      const optionalCount = d % 2 === 0 ? 2 : 1;
+      const total = 3 + optionalCount;
+      for (let i = 0; i < total; i++) {
+        const mandatory = i < 3;
+        await prisma.task.create({
+          data: {
+            dayId: day.id,
+            order: i + 1,
+            title: `Task ${i + 1}`,
+            category: CATEGORIES[(d + i) % CATEGORIES.length],
+            whyItMatters: "Placeholder — the clinician's note for this task goes here.",
+            estimatedMinutes: mandatory ? [10, 2, 10][i] ?? 5 : 3,
+            points: CONFIG_DEFAULTS.pointsPerTask,
+            mandatory,
+            responseType: i === 0 ? "WRITTEN" : "NONE",
+          },
+        });
+      }
     }
   }
 

@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowLeft, Lock, Medal } from "@phosphor-icons/react/dist/ssr";
-import { badges } from "@/lib/mock";
+import { ArrowLeft, Lock } from "@phosphor-icons/react/dist/ssr";
+import { badges } from "@/lib/content";
 
+// Badge auto-awarding is not wired yet, so a fresh account shows all locked.
 export default function BadgesPage() {
-  const earned = badges.filter((b) => b.earned).length;
+  const earned = 0;
   return (
     <div className="mx-auto max-w-[760px]">
       <Link
@@ -21,14 +22,8 @@ export default function BadgesPage() {
       <div className="mt-8 grid grid-cols-3 gap-5 sm:grid-cols-4">
         {badges.map((b) => (
           <div key={b.id} className="flex flex-col items-center gap-2 text-center">
-            <span
-              className={`flex h-20 w-20 items-center justify-center rounded-full border-2 ${
-                b.earned
-                  ? "border-[var(--color-accent)] text-[var(--color-accent)]"
-                  : "border-[var(--color-line-strong)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-faint)]"
-              }`}
-            >
-              {b.earned ? <Medal size={30} weight="fill" /> : <Lock size={24} />}
+            <span className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-[var(--color-line-strong)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-faint)]">
+              <Lock size={24} />
             </span>
             <span className="text-xs font-medium text-[var(--color-ink)]">{b.name}</span>
           </div>

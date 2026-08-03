@@ -2,12 +2,20 @@ import Link from "next/link";
 import { NotePencil, PenNib, LockSimple } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prisma";
+import { requireOnboardedUser } from "@/lib/session";
 
-// Reflections entries. Empty by default (fresh Day-1 account) → D33 empty state.
-// When real data is wired, populate `entries` from the user's saved reflections.
-const entries: { id: string; day: number; date: string; preview: string }[] = [];
+function preview(body: string) {
+  const line = body.split("\n")[0].trim();
+  return line.length > 80 ? line.slice(0, 80) + "…" : line;
+}
 
-export default function ReflectionsPage() {
+export default async function ReflectionsPage() {
+  const user = await requireOnboardedUser();
+  const entries = await prisma.reflection.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+  });
   const isEmpty = entries.length === 0;
 
   return (
@@ -52,9 +60,10 @@ export default function ReflectionsPage() {
             <Link key={e.id} href={`/reflections/${e.id}`}>
               <Card className="flex items-center justify-between p-5 transition-colors hover:border-[var(--color-line-strong)]">
                 <div>
-                  <p className="font-medium text-[var(--color-ink)]">{e.preview}</p>
+                  <p className="font-medium text-[var(--color-ink)]">{preview(e.body)}</p>
                   <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
-                    Day {e.day} · {e.date}
+                    {e.dayNumber ? `Day ${e.dayNumber} · ` : ""}
+                    {e.createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                   </p>
                 </div>
               </Card>

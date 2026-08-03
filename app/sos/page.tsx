@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { Phone, Waveform, ChatCircle, CaretRight, LockSimple } from "@phosphor-icons/react/dist/ssr";
-import { demoUser } from "@/lib/mock";
+import { getCurrentUser } from "@/lib/session";
 
 /*
-  SOS triage — three doors. Safety requirement: this must work WITHOUT login and
-  WITHOUT payment, and must never sit behind a loading spinner. When auth/paywall
-  gating is added, /sos (and its children) must be exempted.
+  SOS triage — three doors. Works WITHOUT login and WITHOUT payment, never behind
+  a spinner. If a user is signed in with a trusted contact, we surface it.
 */
-export default function SosPage() {
+export default async function SosPage() {
+  const user = await getCurrentUser();
+  const trusted = user?.trustedName;
+
   return (
-    <div className="mx-auto max-w-[760px]">
+    <div>
       <p className="eyebrow">SOS</p>
       <h1 className="font-display mt-1 text-[2.75rem] leading-tight text-[var(--color-ink)]">
         What do you need?
@@ -19,7 +21,6 @@ export default function SosPage() {
       </p>
 
       <div className="mt-8 space-y-4">
-        {/* Door 1 — crisis */}
         <Link
           href="/sos/helplines"
           className="flex items-center gap-5 rounded-[var(--radius-lg)] bg-[var(--color-crisis-subtle)] p-6 transition-transform hover:-translate-y-0.5"
@@ -38,7 +39,6 @@ export default function SosPage() {
           <CaretRight size={20} className="text-[var(--color-crisis)]" />
         </Link>
 
-        {/* Door 2 — ride it out */}
         <Link
           href="/sos/ride"
           className="flex items-center gap-5 rounded-[var(--radius-lg)] bg-[var(--color-brand-subtle)] p-6 transition-transform hover:-translate-y-0.5"
@@ -59,7 +59,6 @@ export default function SosPage() {
           </div>
         </Link>
 
-        {/* Door 3 — talk */}
         <Link
           href="/daylight"
           className="flex items-center gap-5 rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6 transition-transform hover:-translate-y-0.5"
@@ -70,7 +69,7 @@ export default function SosPage() {
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-[var(--color-ink)]">I just need to talk</h2>
             <p className="text-sm text-[var(--color-ink-muted)]">
-              Call {demoUser.trustedName}, or talk it out with Daylight.
+              {trusted ? `Call ${trusted}, or talk it out with Daylight.` : "Talk it out with Daylight."}
             </p>
           </div>
           <CaretRight size={20} className="text-[var(--color-ink-faint)]" />

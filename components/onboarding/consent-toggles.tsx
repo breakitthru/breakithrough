@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { saveConsent } from "@/lib/actions";
 
 type Key = "journal" | "chat" | "share" | "analytics";
 
@@ -37,6 +38,18 @@ export function ConsentToggles() {
   const [state, setState] = useState<Record<Key, boolean>>(
     Object.fromEntries(ITEMS.map((i) => [i.key, i.defaultOn])) as Record<Key, boolean>,
   );
+  const [busy, setBusy] = useState(false);
+
+  async function agree() {
+    setBusy(true);
+    await saveConsent({
+      storeJournal: state.journal,
+      storeChat: state.chat,
+      shareSummaryOnBook: state.share,
+      analytics: state.analytics,
+    });
+    router.push("/welcome/trusted-contact");
+  }
 
   return (
     <div>
@@ -71,12 +84,7 @@ export function ConsentToggles() {
         Aligned with India&rsquo;s DPDP Act · <span className="font-medium underline">Read the full policy</span>
       </p>
 
-      <Button
-        variant="primary"
-        size="lg"
-        className="mt-6 w-full"
-        onClick={() => router.push("/welcome/trusted-contact")}
-      >
+      <Button variant="primary" size="lg" className="mt-6 w-full" onClick={agree} disabled={busy}>
         I agree — let&rsquo;s begin
       </Button>
     </div>

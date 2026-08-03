@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Check } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
 import { PHASES } from "@/lib/config";
-import { dayStatus, demoUser } from "@/lib/mock";
+import { requireOnboardedUser } from "@/lib/session";
+import { currentDay, dayStatus } from "@/lib/program";
 
 export default async function PhaseDetailPage({
   params,
@@ -14,9 +15,11 @@ export default async function PhaseDetailPage({
   const phase = PHASES.find((p) => p.order === Number(order));
   if (!phase) notFound();
 
+  const user = await requireOnboardedUser();
+  const today = currentDay(user);
   const days = Array.from({ length: phase.dayEnd - phase.dayStart + 1 }, (_, i) => {
     const dayNumber = phase.dayStart + i;
-    return { dayNumber, status: dayStatus(dayNumber) };
+    return { dayNumber, status: dayStatus(dayNumber, today) };
   });
   const done = days.filter((d) => d.status === "completed").length;
 
@@ -41,7 +44,7 @@ export default async function PhaseDetailPage({
 
       <div className="mt-6 grid grid-cols-1 gap-2">
         {days.map((d) => {
-          const clickable = d.status !== "locked" && d.dayNumber <= demoUser.currentDay;
+          const clickable = d.status !== "upcoming";
           const inner = (
             <Card
               className={`flex items-center gap-4 p-4 ${
@@ -61,11 +64,7 @@ export default async function PhaseDetailPage({
               </span>
               <span className="flex-1 font-medium text-[var(--color-ink)]">Day {d.dayNumber}</span>
               <span className="text-sm text-[var(--color-ink-muted)]">
-                {d.status === "completed"
-                  ? "Done"
-                  : d.status === "today"
-                    ? "Today"
-                    : "Upcoming"}
+                {d.status === "completed" ? "Done" : d.status === "today" ? "Today" : "Upcoming"}
               </span>
             </Card>
           );

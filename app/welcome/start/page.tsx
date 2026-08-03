@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { Confetti } from "@phosphor-icons/react/dist/ssr";
-import { Button } from "@/components/ui/button";
+import { StartButton } from "@/components/onboarding/start-button";
 
 // Trial start (D14) — you're in, Day 1 is ready.
 export default function TrialStartPage() {
@@ -19,11 +18,9 @@ export default function TrialStartPage() {
         No card, no pressure. Just Day 1, waiting whenever you&rsquo;re ready. Take it one small thing
         at a time.
       </p>
-      <Link href="/today" className="mt-10">
-        <Button variant="accent" size="lg">
-          Start Day 1
-        </Button>
-      </Link>
+      <div className="mt-10">
+        <StartButton />
+      </div>
     </div>
   );
 }

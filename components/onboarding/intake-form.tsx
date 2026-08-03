@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { StepBar } from "./split-canvas";
 import type { IntakeQuestion } from "@/lib/onboarding";
+import { saveIntake } from "@/lib/actions";
 
 const ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
   HeartBreak,
@@ -41,8 +42,12 @@ const ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
 export function IntakeForm({ question, total }: { question: IntakeQuestion; total: number }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  function next() {
+  async function next() {
+    if (!selected) return;
+    setBusy(true);
+    await saveIntake(question.step, selected);
     if (question.step < total) router.push(`/welcome/intake/${question.step + 1}`);
     else router.push("/welcome/plan");
   }
@@ -86,7 +91,7 @@ export function IntakeForm({ question, total }: { question: IntakeQuestion; tota
 
       <div className="mt-6 flex items-center justify-between">
         <p className="text-sm text-[var(--color-ink-faint)]">{question.footnote}</p>
-        <Button variant="primary" onClick={next} disabled={!selected}>
+        <Button variant="primary" onClick={next} disabled={!selected || busy}>
           Continue
         </Button>
       </div>

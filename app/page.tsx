@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/session";
 
-// Root: for now, send people straight into the app (demo mode).
-// Later this checks the session and routes to /login vs /today.
-export default function RootPage() {
-  redirect("/today");
+// Route people to the right place based on their auth + onboarding state.
+export default async function RootPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  redirect(user.onboardedAt ? "/today" : "/welcome/intake/1");
 }

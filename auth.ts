@@ -1,16 +1,17 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { env, isGoogleConfigured } from "@/lib/env";
+import { verifyPassword } from "@/lib/password";
 
 /*
-  Auth.js v5 — Google OAuth with JWT (stateless) sessions.
-  The Prisma adapter persists User/Account rows so program progress can attach
-  to a real user; sessions themselves are JWTs (no Session table lookups).
+  Auth.js v5 — email/password (Credentials) as the primary sign-in, plus Google
+  OAuth when its keys are configured. Sessions are stateless JWTs.
 
-  Google is only registered when its keys are present, so the app runs in demo
-  mode locally without OAuth configured.
+  Route protection is done in server-component layouts (see lib/session.ts), not
+  in edge middleware, so the Node-only bits (Prisma, scrypt) never hit the edge.
 */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -20,15 +21,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
   },
-  providers: isGoogleConfigured
-    ? [
-        Google({
-          clientId: env.AUTH_GOOGLE_ID,
-          clientSecret: env.AUTH_GOOGLE_SECRET,
-          allowDangerousEmailAccountLinking: true,
-        }),
-      ]
-    : [],
+  providers: [
+    Credentials({
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(creds) {
+        const email = String(creds?.email ?? "").trim().toLowerCase();
+        const password = String(creds?.password ?? "");
+        if (!email || !password) return null;
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user?.password) return null;
+
+        const ok = await verifyPassword(password, user.password);
+        if (!ok) return null;
+
+        return {
+          id: user.id,
+          name: user.displayName ?? user.name,
+          email: user.email,
+          image: user.image,
+          role: user.role,
+        };
+      },
+    }),
+    ...(isGoogleConfigured
+      ? [
+          Google({
+            clientId: env.AUTH_GOOGLE_ID,
+            clientSecret: env.AUTH_GOOGLE_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
+  ],
   callbacks: {
     jwt({ token, user }) {
       if (user) {

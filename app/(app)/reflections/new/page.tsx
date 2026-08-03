@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
-import { Button } from "@/components/ui/button";
+import { requireOnboardedUser } from "@/lib/session";
+import { ReflectionEditor } from "@/components/app/reflection-editor";
 
-export default function NewReflectionPage() {
+const PROMPT = "What's one thing you noticed today?";
+
+export default async function NewReflectionPage() {
+  await requireOnboardedUser();
   return (
     <div className="mx-auto max-w-[680px]">
       <Link
@@ -14,20 +18,10 @@ export default function NewReflectionPage() {
 
       <p className="eyebrow">Today&rsquo;s prompt</p>
       <h1 className="font-display mt-1 text-[1.9rem] leading-snug text-[var(--color-ink)]">
-        What&rsquo;s one thing you noticed today?
+        {PROMPT}
       </h1>
 
-      <textarea
-        autoFocus
-        rows={14}
-        placeholder="Write anything. No one else sees this."
-        className="mt-6 w-full resize-none rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]"
-      />
-
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-xs text-[var(--color-ink-faint)]">Autosaves as you write</span>
-        <Button variant="primary">Save</Button>
-      </div>
+      <ReflectionEditor prompt={PROMPT} />
     </div>
   );
 }

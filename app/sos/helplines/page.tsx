@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft, Phone } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
-import { helplines } from "@/lib/mock";
+import { helplines } from "@/lib/content";
 
 export default function HelplinesPage() {
   return (
-    <div className="mx-auto max-w-[680px]">
+    <div>
       <Link
         href="/sos"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
