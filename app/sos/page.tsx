@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Phone, Waveform, ChatCircle, CaretRight, LockSimple } from "@phosphor-icons/react/dist/ssr";
+import { Phone, ChatCircle, CaretRight, LockSimple } from "@phosphor-icons/react/dist/ssr";
 import { getCurrentUser } from "@/lib/session";
 
 /*
@@ -43,8 +43,8 @@ export default async function SosPage() {
           href="/sos/ride"
           className="flex items-center gap-5 rounded-[var(--radius-lg)] bg-[var(--color-brand-subtle)] p-6 transition-transform hover:-translate-y-0.5"
         >
-          <span className="flex h-14 w-14 items-center justify-center rounded-full text-[var(--color-accent)] ring-2 ring-[var(--color-accent)]">
-            <Waveform size={26} weight="fill" />
+          <span className="flex h-14 w-14 items-center justify-center rounded-full ring-2 ring-[var(--color-accent)]">
+            <span className="h-6 w-6 rounded-full bg-[var(--color-accent)]" />
           </span>
           <div className="flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-accent)]">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Phone } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, Phone, LockSimple } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
 import { getHelplines } from "@/lib/program";
 
@@ -14,7 +14,7 @@ export default async function HelplinesPage() {
         <ArrowLeft size={16} /> SOS
       </Link>
       <p className="eyebrow">Helplines</p>
-      <h1 className="font-display mt-1 text-[2.5rem] leading-tight text-[var(--color-ink)]">
+      <h1 className="font-display mt-1 text-[2.75rem] leading-tight text-[var(--color-ink)]">
         You&rsquo;re not alone in this.
       </h1>
       <p className="mt-2 text-[var(--color-ink-muted)]">Free, confidential, 24×7 unless noted.</p>
@@ -23,7 +23,7 @@ export default async function HelplinesPage() {
         {helplines.map((h) => (
           <Card key={h.name} className="flex items-center gap-4 p-5">
             <div className="flex-1">
-              <p className="font-medium text-[var(--color-ink)]">{h.name}</p>
+              <p className="font-semibold text-[var(--color-ink)]">{h.name}</p>
               <p className="text-sm text-[var(--color-ink-muted)]">
                 {h.hours} · {h.languages}
               </p>
@@ -37,6 +37,16 @@ export default async function HelplinesPage() {
           </Card>
         ))}
       </div>
+
+      <a
+        href="tel:112"
+        className="mt-6 flex items-center justify-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-crisis)] py-4 font-medium text-[var(--color-crisis)] transition-colors hover:bg-[var(--color-crisis-subtle)]"
+      >
+        <Phone size={18} weight="fill" /> In immediate help? Call 112
+      </a>
+      <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-sm text-[var(--color-ink-faint)]">
+        <LockSimple size={13} /> Private — nothing you do here is shared
+      </p>
     </div>
   );
 }

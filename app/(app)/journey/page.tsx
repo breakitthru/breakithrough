@@ -97,7 +97,7 @@ export default async function JourneyPage() {
     <div className="mx-auto max-w-[760px]">
       <header className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <p className="eyebrow">
+          <p className="eyebrow text-[var(--color-accent)]">
             Phase {currentPhase.order} · Days {currentPhase.dayStart}&ndash;{currentPhase.dayEnd}
           </p>
           <h1 className="font-display mt-1 text-[2.75rem] leading-tight text-[var(--color-ink)]">

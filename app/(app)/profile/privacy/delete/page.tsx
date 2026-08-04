@@ -17,7 +17,7 @@ export default function DeleteAccountPage() {
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-crisis-subtle)] text-[var(--color-crisis)]">
         <Warning size={26} weight="fill" />
       </span>
-      <h1 className="font-display mt-5 text-[2.5rem] leading-tight text-[var(--color-ink)]">
+      <h1 className="font-display mt-5 text-[2.75rem] leading-tight text-[var(--color-ink)]">
         Delete your account?
       </h1>
       <p className="mt-2 text-[var(--color-ink-muted)]">
