@@ -42,7 +42,12 @@ export function TaskComplete({
       setError(res.error ?? "Something went wrong");
       return;
     }
-    router.push(`/journey/day/${dayNumber}`);
+    // Earning a badge takes you to its celebration; otherwise back to the day.
+    if (res.newBadges && res.newBadges.length > 0) {
+      router.push(`/progress/badges/${res.newBadges[0]}`);
+    } else {
+      router.push(`/journey/day/${dayNumber}`);
+    }
     router.refresh();
   }
 

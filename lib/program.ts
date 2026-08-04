@@ -223,3 +223,61 @@ export async function getBadgesWithEarned(userId: string) {
   const earnedSet = new Set(earned.map((e) => e.badgeId));
   return defs.map((b) => ({ ...b, earned: earnedSet.has(b.id) }));
 }
+
+export type Achievement = {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  order: number;
+  earned: boolean;
+  earnedAt: Date | null;
+  /** Progress toward the criterion, capped at the target. */
+  current: number;
+  target: number;
+};
+
+type Crit = { type: "tasks" | "reflections" | "days" | "full_days" | "day_reached"; n: number };
+
+/** Every badge with this user's earned state, timestamp, and progress-to-unlock. */
+export async function getAchievements(user: User): Promise<Achievement[]> {
+  const [tasks, reflections, state, defs, earned] = await Promise.all([
+    prisma.taskCompletion.count({ where: { userId: user.id } }),
+    prisma.reflection.count({ where: { userId: user.id } }),
+    getProgramState(user),
+    prisma.badge.findMany({ orderBy: { order: "asc" } }),
+    prisma.userBadge.findMany({ where: { userId: user.id } }),
+  ]);
+
+  const stats: Record<Crit["type"], number> = {
+    tasks,
+    reflections,
+    days: user.streakCurrent,
+    full_days: state.completed.size,
+    day_reached: state.unlockedDay,
+  };
+  const earnedById = new Map(earned.map((e) => [e.badgeId, e.earnedAt]));
+
+  return defs.map((b) => {
+    const crit = (b.criteria as Crit | null) ?? null;
+    const target = crit?.n ?? 0;
+    const raw = crit ? (stats[crit.type] ?? 0) : 0;
+    return {
+      id: b.id,
+      key: b.key,
+      name: b.name,
+      description: b.description,
+      order: b.order,
+      earned: earnedById.has(b.id),
+      earnedAt: earnedById.get(b.id) ?? null,
+      current: Math.min(raw, target),
+      target,
+    };
+  });
+}
+
+/** A single badge for the detail/celebration screen. */
+export async function getAchievement(user: User, key: string): Promise<Achievement | null> {
+  const all = await getAchievements(user);
+  return all.find((a) => a.key === key) ?? null;
+}

@@ -8,10 +8,14 @@ import { BADGE_DEFS, type BadgeCriteria } from "@/lib/badge-defs";
   the admin panel can eventually edit them.
 */
 
-/** Check the user's stats and award any newly-earned badges. Safe to call often. */
-export async function awardBadges(userId: string): Promise<void> {
+/**
+ * Check the user's stats and award any newly-earned badges. Safe to call often.
+ * Creates a notification for each newly earned badge and returns their keys so
+ * the caller can route to the celebration screen (D41).
+ */
+export async function awardBadges(userId: string): Promise<string[]> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return;
+  if (!user) return [];
 
   const [tasks, reflections, state, badgeRows, already] = await Promise.all([
     prisma.taskCompletion.count({ where: { userId } }),
@@ -31,13 +35,29 @@ export async function awardBadges(userId: string): Promise<void> {
     day_reached: state.unlockedDay,
   };
 
+  const newlyEarned: string[] = [];
   for (const def of BADGE_DEFS) {
     const badge = byKey.get(def.key);
     if (!badge || earnedIds.has(badge.id)) continue;
     if (stats[def.criteria.type] >= def.criteria.n) {
-      await prisma.userBadge
-        .create({ data: { userId, badgeId: badge.id } })
-        .catch(() => {}); // ignore race duplicates
+      try {
+        await prisma.userBadge.create({ data: { userId, badgeId: badge.id } });
+      } catch {
+        continue; // race duplicate — someone already awarded it
+      }
+      await prisma.notification
+        .create({
+          data: {
+            userId,
+            type: "badge",
+            title: `Badge earned: ${badge.name}`,
+            body: badge.description,
+            actionUrl: `/progress/badges/${def.key}`,
+          },
+        })
+        .catch(() => {});
+      newlyEarned.push(def.key);
     }
   }
+  return newlyEarned;
 }

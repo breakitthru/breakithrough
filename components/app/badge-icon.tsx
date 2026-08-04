@@ -31,6 +31,11 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; weight?: "fill"
   "badge-12": Sparkle,
 };
 
+/** The Phosphor icon component for a badge key (falls back to Sparkle). */
+export function badgeIconFor(badgeKey: string) {
+  return ICONS[badgeKey] ?? Sparkle;
+}
+
 /** Circular badge icon. Earned badges alternate evergreen/clay tints; locked
  *  badges are a muted lock. `index` drives the alternating tint. */
 export function BadgeIcon({

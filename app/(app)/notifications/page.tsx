@@ -1,12 +1,39 @@
-import { Bell } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+import { Bell, Trophy, Gift } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
+import { requireOnboardedUser } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 
-const notes = [
-  { id: "n1", title: "Day 12 is ready", body: "Three small things, whenever you're ready.", when: "Today" },
-  { id: "n2", title: "You earned a badge", body: "11-day streak — quietly proud of you.", when: "Yesterday" },
-];
+function iconFor(type: string) {
+  if (type === "badge") return Trophy;
+  if (type === "reward") return Gift;
+  return Bell;
+}
 
-export default function NotificationsPage() {
+function relativeDay(d: Date) {
+  const day = 86_400_000;
+  const diff = Math.floor((Date.now() - d.getTime()) / day);
+  if (diff <= 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  if (diff < 7) return `${diff} days ago`;
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+export default async function NotificationsPage() {
+  const user = await requireOnboardedUser();
+  const notes = await prisma.notification.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+  // Mark everything read now that the user is looking at the list.
+  if (notes.some((n) => !n.read)) {
+    await prisma.notification.updateMany({
+      where: { userId: user.id, read: false },
+      data: { read: true },
+    });
+  }
+
   return (
     <div className="mx-auto max-w-[680px]">
       <header className="mb-8">
@@ -15,20 +42,48 @@ export default function NotificationsPage() {
           What&rsquo;s new.
         </h1>
       </header>
-      <div className="flex flex-col gap-3">
-        {notes.map((n) => (
-          <Card key={n.id} className="flex items-start gap-4 p-5">
-            <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-brand-subtle)] text-[var(--color-brand-subtle-ink)]">
-              <Bell size={18} weight="fill" />
-            </span>
-            <div className="flex-1">
-              <p className="font-medium text-[var(--color-ink)]">{n.title}</p>
-              <p className="mt-0.5 text-sm text-[var(--color-ink-muted)]">{n.body}</p>
-            </div>
-            <span className="text-xs text-[var(--color-ink-faint)]">{n.when}</span>
-          </Card>
-        ))}
-      </div>
+
+      {notes.length === 0 ? (
+        <Card className="flex flex-col items-center gap-3 p-12 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-surface-sunken)] text-[var(--color-ink-faint)]">
+            <Bell size={22} />
+          </span>
+          <p className="text-[var(--color-ink-muted)]">Nothing new yet. Keep showing up.</p>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {notes.map((n) => {
+            const Icon = iconFor(n.type);
+            const body = (
+              <Card
+                className={`flex items-start gap-4 p-5 ${
+                  n.actionUrl ? "transition-colors hover:border-[var(--color-line-strong)]" : ""
+                }`}
+              >
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-subtle)] text-[var(--color-brand-subtle-ink)]">
+                  <Icon size={18} weight="fill" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-[var(--color-ink)]">{n.title}</p>
+                  {n.body && (
+                    <p className="mt-0.5 text-sm text-[var(--color-ink-muted)]">{n.body}</p>
+                  )}
+                </div>
+                <span className="shrink-0 text-xs text-[var(--color-ink-faint)]">
+                  {relativeDay(n.createdAt)}
+                </span>
+              </Card>
+            );
+            return n.actionUrl ? (
+              <Link key={n.id} href={n.actionUrl}>
+                {body}
+              </Link>
+            ) : (
+              <div key={n.id}>{body}</div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

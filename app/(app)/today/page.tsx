@@ -46,6 +46,9 @@ export default async function TodayPage() {
     where: { userId_dayNumber: { userId: user.id, dayNumber: today } },
     select: { value: true },
   });
+  const unreadNotes = await prisma.notification.count({
+    where: { userId: user.id, read: false },
+  });
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -67,8 +70,17 @@ export default async function TodayPage() {
               <Trophy size={20} weight="fill" />
               {user.pointsBalance}
             </Link>
-            <Link href="/notifications" aria-label="Notifications" className="hover:text-[var(--color-ink)]">
+            <Link
+              href="/notifications"
+              aria-label={unreadNotes > 0 ? `Notifications, ${unreadNotes} unread` : "Notifications"}
+              className="relative hover:text-[var(--color-ink)]"
+            >
               <Bell size={22} />
+              {unreadNotes > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-accent)] px-1 text-[0.6rem] font-semibold text-[var(--color-accent-fg)]">
+                  {unreadNotes > 9 ? "9+" : unreadNotes}
+                </span>
+              )}
             </Link>
           </div>
         </header>

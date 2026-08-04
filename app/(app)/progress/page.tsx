@@ -74,10 +74,16 @@ export default async function ProgressPage() {
         </div>
         <div className="mt-4 grid grid-cols-4 gap-4">
           {preview.map((b, i) => (
-            <div key={b.id} className="flex flex-col items-center gap-2 text-center">
-              <BadgeIcon badgeKey={b.key} earned={b.earned} index={i} />
+            <Link
+              key={b.id}
+              href={`/progress/badges/${b.key}`}
+              className="group flex flex-col items-center gap-2 text-center"
+            >
+              <span className="transition-transform group-hover:-translate-y-0.5">
+                <BadgeIcon badgeKey={b.key} earned={b.earned} index={i} />
+              </span>
               <span className="text-xs text-[var(--color-ink-muted)]">{b.name}</span>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

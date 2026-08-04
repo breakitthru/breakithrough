@@ -145,13 +145,14 @@ export async function completeTask(taskId: string, response?: string) {
     });
   });
 
-  await awardBadges(user.id);
+  const newBadges = await awardBadges(user.id);
 
   revalidatePath("/today");
   revalidatePath(`/journey/day/${task.day.dayNumber}`);
   revalidatePath("/journey");
   revalidatePath("/progress");
-  return { ok: true as const };
+  revalidatePath("/notifications");
+  return { ok: true as const, newBadges };
 }
 
 /** Save a reflection entry for the current user. */
@@ -169,10 +170,12 @@ export async function saveReflection(input: { dayNumber?: number; prompt?: strin
       body,
     },
   });
-  await awardBadges(user.id);
+  const newBadges = await awardBadges(user.id);
   revalidatePath("/reflections");
   revalidatePath("/progress");
-  redirect("/reflections");
+  revalidatePath("/notifications");
+  // Earning a badge sends the user to its celebration; otherwise back to the notebook.
+  redirect(newBadges.length ? `/progress/badges/${newBadges[0]}` : "/reflections");
 }
 
 /** Save today's mood check-in (0 heavy · 1 flat · 2 okay · 3 lighter). No redirect. */
