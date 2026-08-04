@@ -5,33 +5,52 @@ import { requireOnboardedUser } from "@/lib/session";
 import { getProgramState, type DayStatus } from "@/lib/program";
 import { phaseForDay, PHASES } from "@/lib/config";
 
-const WAVE = [0, 70, 100, 70, 0, -70, -100, -70];
+// Serpentine road geometry. Nodes wander left/right down the page; a dotted SVG
+// path threads through their centres and the opaque nodes sit on top, so the
+// dots only show in the gaps — matching the "road" mockup (D25).
+const WIDTH = 480;
+const CENTER_X = WIDTH / 2;
+const AMP = 132;
+const ROW_H = 82;
+const PAD_Y = 52;
 
-function DayNode({ day, status }: { day: number; status: DayStatus }) {
-  const isToday = status === "today";
-  const isDone = status === "completed";
-  const isAvailable = status === "available";
-  return (
-    <div className="flex items-center gap-3">
+function nodeX(i: number) {
+  return CENTER_X + Math.sin((i + 0.6) * 0.72) * AMP;
+}
+
+function DayCircle({ day, status }: { day: number; status: DayStatus }) {
+  const base =
+    "flex items-center justify-center rounded-full font-medium transition-colors";
+  if (status === "today") {
+    return (
       <div
-        className={[
-          "flex items-center justify-center rounded-full font-medium transition-colors",
-          isToday
-            ? "h-16 w-16 bg-[var(--color-accent)] text-[var(--color-accent-fg)] text-lg ring-4 ring-[var(--color-accent-subtle)]"
-            : isDone
-              ? "h-11 w-11 bg-[var(--color-brand-ink)] text-white text-sm"
-              : isAvailable
-                ? "h-11 w-11 border-2 border-[var(--color-accent)] bg-[var(--color-surface)] text-[var(--color-accent-subtle-ink)] text-sm"
-                : "h-11 w-11 border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-faint)] text-sm",
-        ].join(" ")}
+        className={`${base} h-16 w-16 bg-[var(--color-accent)] text-[var(--color-accent-fg)] text-lg shadow-[var(--shadow-card)] ring-[6px] ring-[var(--color-accent-subtle)]`}
       >
-        {isDone ? <Check size={18} weight="bold" /> : day}
+        {day}
       </div>
-      {isToday && (
-        <span className="rounded-[var(--radius-pill)] bg-[var(--color-accent-subtle)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-accent-subtle-ink)]">
-          Today
-        </span>
-      )}
+    );
+  }
+  if (status === "completed") {
+    return (
+      <div className={`${base} h-12 w-12 bg-[var(--color-brand-ink)] text-white text-sm`}>
+        {day}
+      </div>
+    );
+  }
+  if (status === "available") {
+    return (
+      <div
+        className={`${base} h-12 w-12 border-2 border-[var(--color-accent)] bg-[var(--color-surface)] text-[var(--color-accent-subtle-ink)] text-sm`}
+      >
+        {day}
+      </div>
+    );
+  }
+  return (
+    <div
+      className={`${base} h-12 w-12 border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-faint)] text-sm`}
+    >
+      {day}
     </div>
   );
 }
@@ -47,65 +66,100 @@ export default async function JourneyPage() {
     (_, i) => currentPhase.dayStart + i,
   );
 
+  const points = focusDays.map((dayNumber, i) => ({
+    dayNumber,
+    status: state.statusFor(dayNumber),
+    x: nodeX(i),
+    y: PAD_Y + i * ROW_H,
+  }));
+  const roadHeight = PAD_Y * 2 + (focusDays.length - 1) * ROW_H;
+  const pathD = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+    .join(" ");
+
   return (
     <div className="mx-auto max-w-[760px]">
-      <header className="mb-10">
-        <p className="eyebrow">
-          Phase {currentPhase.order} · Days {currentPhase.dayStart}&ndash;{currentPhase.dayEnd}
-        </p>
-        <div className="mt-1 flex items-baseline justify-between">
-          <h1 className="font-display text-[2.75rem] leading-tight text-[var(--color-ink)]">
+      <header className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <p className="eyebrow">
+            Phase {currentPhase.order} · Days {currentPhase.dayStart}&ndash;{currentPhase.dayEnd}
+          </p>
+          <h1 className="font-display mt-1 text-[2.75rem] leading-tight text-[var(--color-ink)]">
             {currentPhase.name}
           </h1>
-          <Chip tone="accent">Day {state.resumeDay}</Chip>
         </div>
+        <Chip tone="accent" className="mt-2 uppercase tracking-wide">
+          Day {state.resumeDay}
+        </Chip>
       </header>
 
+      {/* Completed phase marker above the road */}
       {prevPhase && (
-        <div className="mb-2 flex justify-center">
+        <div className="mb-4 flex justify-center">
           <Link href={`/journey/phase/${prevPhase.order}`}>
-            <Chip tone="brand" className="gap-1.5">
-              <Check size={14} weight="bold" /> Phase {prevPhase.order} · {prevPhase.name}
+            <Chip tone="brand" className="gap-1.5 uppercase tracking-wide">
+              Phase {prevPhase.order} · {prevPhase.name} <Check size={13} weight="bold" />
             </Chip>
           </Link>
         </div>
       )}
 
-      <div className="flex flex-col items-center">
-        {focusDays.map((dayNumber, i) => {
-          const status = state.statusFor(dayNumber);
+      {/* The road */}
+      <div className="relative mx-auto" style={{ width: WIDTH, height: roadHeight }}>
+        <svg
+          width={WIDTH}
+          height={roadHeight}
+          className="absolute inset-0"
+          aria-hidden
+        >
+          <path
+            d={pathD}
+            fill="none"
+            stroke="var(--color-line-strong)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeDasharray="0.5 11"
+          />
+        </svg>
+
+        {points.map((p) => {
+          const pillLeft = p.x > CENTER_X;
+          const circle = <DayCircle day={p.dayNumber} status={p.status} />;
           return (
-            <div key={dayNumber} className="flex flex-col items-center">
-              <div style={{ transform: `translateX(${WAVE[i % WAVE.length]}px)` }}>
-                {status === "upcoming" ? (
-                  <DayNode day={dayNumber} status={status} />
-                ) : (
-                  <Link href={`/journey/day/${dayNumber}`}>
-                    <DayNode day={dayNumber} status={status} />
-                  </Link>
-                )}
-              </div>
-              {i < focusDays.length - 1 && (
-                <div
-                  className="my-2 flex flex-col items-center gap-1.5"
-                  style={{ transform: `translateX(${(WAVE[i % WAVE.length] + WAVE[(i + 1) % WAVE.length]) / 2}px)` }}
-                >
-                  {[0, 1, 2].map((k) => (
-                    <span key={k} className="h-1 w-1 rounded-full bg-[var(--color-line-strong)]" />
-                  ))}
-                </div>
+            <div
+              key={p.dayNumber}
+              className="absolute flex items-center"
+              style={{ left: p.x, top: p.y, transform: "translate(-50%, -50%)" }}
+            >
+              {p.status === "today" && pillLeft && (
+                <span className="mr-3 rounded-[var(--radius-pill)] bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-accent-fg)]">
+                  Today
+                </span>
+              )}
+              {p.status === "upcoming" ? (
+                circle
+              ) : (
+                <Link href={`/journey/day/${p.dayNumber}`} aria-label={`Day ${p.dayNumber}`}>
+                  {circle}
+                </Link>
+              )}
+              {p.status === "today" && !pillLeft && (
+                <span className="ml-3 rounded-[var(--radius-pill)] bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-accent-fg)]">
+                  Today
+                </span>
               )}
             </div>
           );
         })}
       </div>
 
+      {/* Next phase marker below the road */}
       {nextPhase && (
-        <div className="mt-8 flex items-center justify-center gap-2 text-sm text-[var(--color-ink-muted)]">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-line-strong)] bg-[var(--color-surface)]">
+        <div className="mt-6 flex items-center justify-center gap-2.5 text-sm text-[var(--color-ink-muted)]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-faint)]">
             <Flag size={16} />
           </span>
-          Phase {nextPhase.order} · {nextPhase.name} — unlocks Day {nextPhase.dayStart}
+          Phase {nextPhase.order} · {nextPhase.name} &mdash; unlocks Day {nextPhase.dayStart}
         </div>
       )}
     </div>

@@ -1,14 +1,34 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Play, Circle, CheckCircle, CaretLeft, CaretRight, Lock } from "@phosphor-icons/react/dist/ssr";
+import {
+  ArrowLeft,
+  Play,
+  Circle,
+  CheckCircle,
+  CaretLeft,
+  CaretRight,
+  Lock,
+  SmileySad,
+  SmileyMeh,
+  Smiley,
+  SmileyWink,
+} from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
 import { getConfig } from "@/lib/config";
 import { requireOnboardedUser } from "@/lib/session";
 import { getProgramState, getDayView } from "@/lib/program";
+import { prisma } from "@/lib/prisma";
 
 function categoryLabel(c: string) {
   return c[0] + c.slice(1).toLowerCase();
 }
+
+const MOOD = [
+  { Icon: SmileySad, label: "A heavy day", note: "You logged your mood as low" },
+  { Icon: SmileyMeh, label: "A flat day", note: "You logged your mood as even" },
+  { Icon: Smiley, label: "An okay day", note: "You logged your mood as steadier" },
+  { Icon: SmileyWink, label: "A lighter day", note: "You logged your mood as lighter" },
+];
 
 export default async function DayPage({ params }: { params: Promise<{ day: string }> }) {
   const { day: dayParam } = await params;
@@ -47,6 +67,22 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
   const mandatory = day.tasks.filter((t) => t.mandatory);
   const optional = day.tasks.filter((t) => !t.mandatory);
   const points = mandatory.reduce((s, t) => s + t.points, 0);
+  const optionalDone = optional.filter((t) => t.completed).length;
+  const dayComplete = mandatory.length > 0 && mandatory.every((t) => t.completed);
+  const isToday = dayNumber === today;
+
+  // Completed-day context: what the user wrote and how the day felt (D26).
+  const [reflection, mood] = dayComplete
+    ? await Promise.all([
+        prisma.reflection.findFirst({
+          where: { userId: user.id, dayNumber },
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.moodLog.findUnique({
+          where: { userId_dayNumber: { userId: user.id, dayNumber } },
+        }),
+      ])
+    : [null, null];
 
   return (
     <div className="mx-auto max-w-[1040px]">
@@ -70,10 +106,17 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
               Day {dayNumber}
             </h1>
           </div>
-          <p className="mt-3 text-sm text-[var(--color-accent)]">
-            {day.progress.done} of {day.progress.total} done
-            {dayNumber === today ? <span className="text-[var(--color-ink-muted)]"> · Today</span> : null}
-          </p>
+          {dayComplete ? (
+            <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-[var(--color-success)]">
+              <CheckCircle size={16} weight="fill" /> Completed
+              {isToday ? <span className="text-[var(--color-ink-muted)]"> · Today</span> : null}
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-[var(--color-accent)]">
+              {day.progress.done} of {day.progress.total} done
+              {isToday ? <span className="text-[var(--color-ink-muted)]"> · Today</span> : null}
+            </p>
+          )}
 
           {day.videos.length > 0 && (
             <section className="mt-8">
@@ -103,7 +146,7 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
 
           <section className="mt-8">
             <p className="eyebrow mb-1">
-              The {mandatory.length} essentials · {points} points to earn
+              The {mandatory.length} essentials · {dayComplete ? `+${points} points` : `${points} points to earn`}
             </p>
             <div className="mt-2 divide-y divide-[var(--color-line)] rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)]">
               {mandatory.map((t) => (
@@ -159,16 +202,27 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
                 </span>
                 <CaretRight size={16} />
               </Link>
+            ) : dayNumber < config.programDays ? (
+              <span className="flex items-center gap-2 text-right text-[var(--color-ink-faint)]">
+                <span>
+                  <span className="eyebrow block">Tomorrow</span>Day {dayNumber + 1}
+                </span>
+                <CaretRight size={16} />
+              </span>
             ) : (
               <span />
             )}
           </div>
         </div>
 
-        <aside>
+        <aside className="flex flex-col gap-8">
           {optional.length > 0 && (
-            <>
-              <p className="eyebrow mb-3">If you have more in you</p>
+            <div>
+              <p className="eyebrow mb-3">
+                {dayComplete
+                  ? `Optional · ${optionalDone} of ${optional.length} done`
+                  : "If you have more in you"}
+              </p>
               <div className="flex flex-col gap-3">
                 {optional.map((t) => (
                   <Link
@@ -191,7 +245,51 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
                   </Link>
                 ))}
               </div>
-            </>
+            </div>
+          )}
+
+          {reflection && (
+            <div>
+              <p className="eyebrow mb-3">What you wrote</p>
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+                <p className="font-display text-lg leading-snug text-[var(--color-ink)]">
+                  &ldquo;{reflection.body.length > 90 ? reflection.body.slice(0, 90).trimEnd() + "…" : reflection.body}&rdquo;
+                </p>
+                <div className="mt-3 flex items-center justify-between text-xs text-[var(--color-ink-muted)]">
+                  <span>
+                    {reflection.body.trim().split(/\s+/).length} words ·{" "}
+                    {reflection.createdAt.toLocaleTimeString("en-IN", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <Link
+                    href={`/reflections/${reflection.id}`}
+                    className="font-medium text-[var(--color-accent)] hover:underline"
+                  >
+                    Read entry
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mood && MOOD[mood.value] && (
+            <div>
+              <p className="eyebrow mb-3">How the day felt</p>
+              <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-accent-subtle)] text-[var(--color-accent)]">
+                  {(() => {
+                    const Icon = MOOD[mood.value].Icon;
+                    return <Icon size={22} weight="fill" />;
+                  })()}
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-[var(--color-ink)]">{MOOD[mood.value].label}</p>
+                  <p className="text-xs text-[var(--color-ink-muted)]">{MOOD[mood.value].note}</p>
+                </div>
+              </div>
+            </div>
           )}
         </aside>
       </div>
