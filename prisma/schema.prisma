@@ -67,6 +67,7 @@ model User {
   points          PointsLedger[]
   badges          UserBadge[]
   reflections     Reflection[]
+  moods           MoodLog[]
   consent         Consent?
   sosEvents       SosEvent[]
   redemptions     Redemption[]
@@ -284,6 +285,20 @@ model Reflection {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([userId])
+}
+
+// One mood check-in per program day (upserted). value: 0 heavy · 1 flat · 2 okay · 3 lighter.
+model MoodLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayNumber Int
+  value     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, dayNumber])
   @@index([userId])
 }
 

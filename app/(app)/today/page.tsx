@@ -4,18 +4,15 @@ import {
   Bell,
   VideoCamera,
   UsersThree,
-  DotsThreeOutline,
   PencilSimpleLine,
-  SmileySad,
-  SmileyMeh,
-  Smiley,
-  SmileyWink,
 } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { requireOnboardedUser } from "@/lib/session";
 import { getProgramState, getDayView } from "@/lib/program";
 import { getConfig } from "@/lib/config";
+import { prisma } from "@/lib/prisma";
+import { MoodPicker } from "@/components/app/mood-picker";
 
 function greeting(hour: number) {
   if (hour < 12) return "Good morning";
@@ -45,6 +42,11 @@ export default async function TodayPage() {
   const headline = mandatory.find((t) => !t.completed) ?? mandatory[0];
   const progress = day?.progress ?? { done: 0, total: 0, optionalDone: 0 };
 
+  const mood = await prisma.moodLog.findUnique({
+    where: { userId_dayNumber: { userId: user.id, dayNumber: today } },
+    select: { value: true },
+  });
+
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="max-w-[720px]">
@@ -71,10 +73,11 @@ export default async function TodayPage() {
           </div>
         </header>
 
-        {/* Day banner */}
+        {/* Day banner — subtle evergreen gradient with a clay accent tick top-left */}
         <Link href="/journey" className="block">
-          <div className="relative overflow-hidden rounded-[var(--radius-lg)] bg-[var(--color-brand-ink)] p-7 text-[var(--color-brand-fg)] shadow-[var(--shadow-card)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/55">
+          <div className="relative overflow-hidden rounded-[var(--radius-lg)] bg-gradient-to-br from-[#123528] via-[#0e241a] to-[#0a1c14] p-7 text-[var(--color-brand-fg)] shadow-[var(--shadow-card)]">
+            <span className="absolute left-7 top-6 h-[3px] w-8 rounded-full bg-[var(--color-accent)]" />
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-white/55">
               Your journey · Phase {day?.phaseOrder ?? 1} of 4
             </p>
             <h2 className="font-display mt-2 text-[2rem] leading-tight">{day?.phaseName ?? "Steady breath"}</h2>
@@ -111,11 +114,26 @@ export default async function TodayPage() {
                 </p>
               )}
             </div>
-            <span className="flex items-center gap-1 text-[var(--color-ink-faint)]">
-              <DotsThreeOutline size={18} />
-              <span className="text-xs">
-                {progress.done}/{progress.total}
-              </span>
+            {/* Progress dots: mandatory as rings (filled when done), optional as small dots */}
+            <span className="flex items-center gap-1.5" aria-label={`${progress.done} of ${progress.total} done`}>
+              {mandatory.map((t) => (
+                <span
+                  key={t.id}
+                  className={`h-2.5 w-2.5 rounded-full border-[1.5px] ${
+                    t.completed
+                      ? "border-[var(--color-accent)] bg-[var(--color-accent)]"
+                      : "border-[var(--color-line-strong)]"
+                  }`}
+                />
+              ))}
+              {optional.map((t) => (
+                <span
+                  key={t.id}
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    t.completed ? "bg-[var(--color-accent)]" : "bg-[var(--color-line-strong)]"
+                  }`}
+                />
+              ))}
             </span>
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-fg)]">
               <PencilSimpleLine size={20} />
@@ -123,35 +141,8 @@ export default async function TodayPage() {
           </Card>
         </Link>
 
-        {/* Reflection prompt */}
-        <Card className="mt-5 p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-[var(--color-ink)]">How&rsquo;s today feeling?</h3>
-            <Link
-              href="/reflections/new"
-              className="text-sm text-[var(--color-ink-muted)] underline-offset-4 hover:underline"
-            >
-              Write instead
-            </Link>
-          </div>
-          <div className="mt-4 flex gap-3">
-            {[
-              { Icon: SmileySad, label: "Heavy" },
-              { Icon: SmileyMeh, label: "Flat" },
-              { Icon: Smiley, label: "Okay" },
-              { Icon: SmileyWink, label: "Lighter" },
-            ].map(({ Icon, label }) => (
-              <Link
-                key={label}
-                href="/reflections/new"
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-line)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
-                aria-label={label}
-              >
-                <Icon size={24} />
-              </Link>
-            ))}
-          </div>
-        </Card>
+        {/* Mood check-in (interactive, stores to DB, does not open the journal) */}
+        <MoodPicker initial={mood?.value ?? null} />
 
         <p className="mt-10 text-center text-sm italic text-[var(--color-ink-faint)]">
           Just begin. That&rsquo;s enough.

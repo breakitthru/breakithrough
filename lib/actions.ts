@@ -175,6 +175,23 @@ export async function saveReflection(input: { dayNumber?: number; prompt?: strin
   redirect("/reflections");
 }
 
+/** Save today's mood check-in (0 heavy · 1 flat · 2 okay · 3 lighter). No redirect. */
+export async function saveMood(value: number) {
+  const user = await requireUser();
+  if (!Number.isInteger(value) || value < 0 || value > 3) {
+    return { ok: false as const, error: "Invalid mood" };
+  }
+  const state = await getProgramState(user);
+  const dayNumber = state.resumeDay;
+  await prisma.moodLog.upsert({
+    where: { userId_dayNumber: { userId: user.id, dayNumber } },
+    update: { value },
+    create: { userId: user.id, dayNumber, value },
+  });
+  revalidatePath("/today");
+  return { ok: true as const, value };
+}
+
 // ── Rewards & payments ──────────────────────────────────────────────
 
 /** Redeem a reward: check balance, deduct points atomically, record it. */
