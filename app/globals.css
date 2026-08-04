@@ -111,6 +111,25 @@ body {
   color: var(--color-accent-subtle-ink);
 }
 
+/* Daylight chat opens by expanding out of the dock in the bottom-right corner. */
+@keyframes daylight-reveal {
+  from {
+    clip-path: circle(0% at 90% 96%);
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    clip-path: circle(160% at 90% 96%);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.daylight-reveal {
+  animation: daylight-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: clip-path, opacity, transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -1,8 +1,15 @@
-import Link from "next/link";
-import { ChatCircleDots } from "@phosphor-icons/react/dist/ssr";
+"use client";
 
-/** Floating "Daylight" AI companion entry, bottom-right of the content area. */
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ChatCircleDots } from "@phosphor-icons/react";
+
+/** Floating "Daylight" AI companion entry, bottom-right of the content area.
+ *  Hidden while inside the Daylight chat itself. */
 export function DaylightDock() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/daylight")) return null;
+
   return (
     <Link
       href="/daylight"
