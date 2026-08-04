@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { ArrowLeft, Gift, Lock, Medal } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, Gift } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
 import { requireOnboardedUser } from "@/lib/session";
 import { getProgramState, reflectionCount, getBadgesWithEarned } from "@/lib/program";
 import { getConfig } from "@/lib/config";
+import { BadgeIcon } from "@/components/app/badge-icon";
 
 export default async function ProgressPage() {
   const user = await requireOnboardedUser();
   const config = await getConfig();
   const state = await getProgramState(user);
-  const today = state.resumeDay;
+  const shownUp = user.streakCurrent;
   const reflections = await reflectionCount(user.id);
   const badges = await getBadgesWithEarned(user.id);
   const earned = badges.filter((b) => b.earned).length;
@@ -38,15 +39,15 @@ export default async function ProgressPage() {
             You&rsquo;ve shown up
           </p>
           <p className="mt-2 font-display text-[2.75rem] leading-none">
-            {user.streakCurrent}
+            {shownUp}
             <span className="ml-2 align-baseline text-base font-normal text-white/60">
-              {user.streakCurrent === 1 ? "day" : "days"}
+              of {config.programDays} days
             </span>
           </p>
           <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-white/15">
             <div
               className="h-full rounded-full bg-[var(--color-accent)]"
-              style={{ width: `${(today / config.programDays) * 100}%` }}
+              style={{ width: `${Math.min(100, (shownUp / config.programDays) * 100)}%` }}
             />
           </div>
           <p className="mt-3 text-sm text-white/60">Streaks pause, never break — every return counts.</p>
@@ -72,17 +73,9 @@ export default async function ProgressPage() {
           </Link>
         </div>
         <div className="mt-4 grid grid-cols-4 gap-4">
-          {preview.map((b) => (
+          {preview.map((b, i) => (
             <div key={b.id} className="flex flex-col items-center gap-2 text-center">
-              <span
-                className={`flex h-16 w-16 items-center justify-center rounded-full border-2 ${
-                  b.earned
-                    ? "border-[var(--color-accent)] text-[var(--color-accent)]"
-                    : "border-[var(--color-line-strong)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-faint)]"
-                }`}
-              >
-                {b.earned ? <Medal size={26} weight="fill" /> : <Lock size={22} />}
-              </span>
+              <BadgeIcon badgeKey={b.key} earned={b.earned} index={i} />
               <span className="text-xs text-[var(--color-ink-muted)]">{b.name}</span>
             </div>
           ))}
@@ -96,22 +89,25 @@ export default async function ProgressPage() {
             See shop
           </Link>
         </div>
-        <Card className="mt-3 flex items-center gap-3 bg-[var(--color-brand-subtle)] p-5">
-          <span className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand-ink)] text-white">
+        <Card className="mt-3 flex items-center gap-3 bg-[var(--color-brand-subtle)] p-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand-ink)] text-white">
             <Gift size={20} weight="fill" />
           </span>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <p className="font-semibold text-[var(--color-ink)]">
               {user.pointsBalance} points to spend
             </p>
-            <p className="text-xs text-[var(--color-ink-muted)]">Redeem for merch in our shop</p>
+            <p className="text-xs text-[var(--color-ink-muted)]">
+              Redeem them for merch in our online shop.
+            </p>
           </div>
-        </Card>
-        <Link href="/progress/rewards">
-          <button className="mt-3 w-full rounded-[var(--radius-pill)] bg-[var(--color-accent)] py-2.5 text-sm font-medium text-[var(--color-accent-fg)] hover:bg-[var(--color-accent-hover)]">
+          <Link
+            href="/progress/rewards"
+            className="shrink-0 rounded-[var(--radius-pill)] bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-accent-fg)] hover:bg-[var(--color-accent-hover)]"
+          >
             Shop
-          </button>
-        </Link>
+          </Link>
+        </Card>
       </aside>
     </div>
   );

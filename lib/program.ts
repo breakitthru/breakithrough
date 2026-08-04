@@ -74,10 +74,12 @@ export async function getProgramState(user: User): Promise<ProgramState> {
 
   const isAccessible = (n: number) => n <= trialDays || paid;
   const statusFor = (n: number): DayStatus => {
+    // The real calendar day stays "today" (clay) until the next day unlocks,
+    // even after all its tasks are done — the orange marker never regresses.
+    if (n === unlockedDay) return "today";
     if (n > unlockedDay) return "upcoming";
     if (completed.has(n)) return "completed";
-    if (n === resumeDay) return "today";
-    return "available";
+    return "available"; // a past, unlocked day the user hasn't finished
   };
 
   return {
