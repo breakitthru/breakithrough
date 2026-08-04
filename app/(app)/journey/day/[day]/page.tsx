@@ -88,54 +88,54 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
     <div className="mx-auto max-w-[1040px]">
       <Link
         href="/journey"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
       >
         <ArrowLeft size={16} /> Back
       </Link>
 
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_260px]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
         <div>
           <p className="eyebrow">
             Phase {day.phaseOrder} · {day.phaseName}
           </p>
-          <div className="mt-2 flex items-center gap-4">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-brand-ink)] text-lg font-medium text-white">
+          <div className="mt-1.5 flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-brand-ink)] text-base font-semibold text-white">
               {dayNumber}
             </span>
-            <h1 className="font-display text-[2.5rem] leading-none text-[var(--color-ink)]">
+            <h1 className="font-display text-[2.25rem] leading-none text-[var(--color-ink)]">
               Day {dayNumber}
             </h1>
           </div>
           {dayComplete ? (
-            <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-[var(--color-success)]">
+            <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-[var(--color-success)]">
               <CheckCircle size={16} weight="fill" /> Completed
-              {isToday ? <span className="text-[var(--color-ink-muted)]"> · Today</span> : null}
+              {isToday ? <span className="font-normal text-[var(--color-ink-muted)]"> · Today</span> : null}
             </p>
           ) : (
-            <p className="mt-3 text-sm text-[var(--color-accent)]">
+            <p className="mt-2 text-sm font-semibold text-[var(--color-accent)]">
               {day.progress.done} of {day.progress.total} done
-              {isToday ? <span className="text-[var(--color-ink-muted)]"> · Today</span> : null}
+              {isToday ? <span className="font-normal text-[var(--color-ink-muted)]"> · Today</span> : null}
             </p>
           )}
 
           {day.videos.length > 0 && (
-            <section className="mt-8">
-              <p className="eyebrow mb-3">
+            <section className="mt-6">
+              <p className="eyebrow mb-2.5">
                 Watch first · {day.videos.length} video{day.videos.length > 1 ? "s" : ""}
               </p>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {day.videos.slice(0, 2).map((v) => (
                   <div
                     key={v.id}
-                    className="group relative aspect-[16/10] overflow-hidden rounded-[var(--radius-md)] bg-[var(--color-brand-ink)]"
+                    className="group relative aspect-[16/9] overflow-hidden rounded-[var(--radius-md)] bg-[var(--color-brand-ink)]"
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur transition-colors group-hover:bg-white/25">
-                        <Play size={20} weight="fill" className="text-white" />
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 backdrop-blur transition-colors group-hover:bg-white/25">
+                        <Play size={18} weight="fill" className="text-white" />
                       </span>
                     </div>
-                    <div className="absolute inset-x-0 bottom-0 p-4">
-                      <p className="text-sm font-medium text-white">{v.title}</p>
+                    <div className="absolute inset-x-0 bottom-0 p-3.5">
+                      <p className="text-sm font-semibold text-white">{v.title}</p>
                       <p className="text-xs text-white/60">{v.durationLabel}</p>
                     </div>
                   </div>
@@ -144,41 +144,43 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
             </section>
           )}
 
-          <section className="mt-8">
-            <p className="eyebrow mb-1">
+          <section className="mt-6">
+            <p className="eyebrow mb-2.5">
               The {mandatory.length} essentials · {dayComplete ? `+${points} points` : `${points} points to earn`}
             </p>
-            <div className="mt-2 divide-y divide-[var(--color-line)] rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)]">
+            <div className="flex flex-col gap-2.5">
               {mandatory.map((t) => (
                 <Link
                   key={t.id}
                   href={`/journey/day/${dayNumber}/task/${t.id}`}
-                  className="flex items-center gap-4 px-4 py-4 transition-colors hover:bg-[var(--color-surface-sunken)]"
+                  className="flex items-center gap-3.5 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3 transition-colors hover:border-[var(--color-line-strong)]"
                 >
                   {t.completed ? (
-                    <CheckCircle size={22} weight="fill" className="text-[var(--color-success)]" />
+                    <CheckCircle size={22} weight="fill" className="shrink-0 text-[var(--color-success)]" />
                   ) : (
-                    <Circle size={22} className="text-[var(--color-line-strong)]" />
+                    <Circle size={22} className="shrink-0 text-[var(--color-line-strong)]" />
                   )}
                   <div className="flex-1">
-                    <p className={`font-medium ${t.completed ? "text-[var(--color-ink-muted)] line-through" : "text-[var(--color-ink)]"}`}>
+                    <p className={`font-semibold ${t.completed ? "text-[var(--color-ink-muted)] line-through" : "text-[var(--color-ink)]"}`}>
                       {t.title}
                     </p>
-                    <p className="text-sm text-[var(--color-ink-muted)]">
+                    <p className="text-[0.8rem] text-[var(--color-ink-muted)]">
                       {categoryLabel(t.category)} · {t.estimatedMinutes} min
                     </p>
                   </div>
-                  <span className="text-sm font-medium text-[var(--color-accent)]">+{t.points}</span>
+                  <span className="rounded-[var(--radius-pill)] bg-[var(--color-success-subtle)] px-2 py-0.5 text-xs font-semibold text-[var(--color-success)]">
+                    +{t.points}
+                  </span>
                 </Link>
               ))}
             </div>
           </section>
 
-          <p className="mt-8 text-center text-sm italic text-[var(--color-ink-faint)]">
+          <p className="mt-5 text-center text-sm italic text-[var(--color-ink-faint)]">
             Start anywhere. Any of these counts.
           </p>
 
-          <div className="mt-8 flex items-center justify-between border-t border-[var(--color-line)] pt-6 text-sm">
+          <div className="mt-5 flex items-center justify-between border-t border-[var(--color-line)] pt-4 text-sm">
             {dayNumber > 1 ? (
               <Link
                 href={`/journey/day/${dayNumber - 1}`}
@@ -236,12 +238,14 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
                       <Circle size={18} className="text-[var(--color-line-strong)]" />
                     )}
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-[var(--color-ink)]">{t.title}</p>
+                      <p className="text-sm font-semibold text-[var(--color-ink)]">{t.title}</p>
                       <p className="text-xs text-[var(--color-ink-muted)]">
                         {categoryLabel(t.category)} · {t.estimatedMinutes} min
                       </p>
                     </div>
-                    <span className="text-xs font-medium text-[var(--color-accent)]">+{t.points}</span>
+                    <span className="rounded-[var(--radius-pill)] bg-[var(--color-success-subtle)] px-2 py-0.5 text-xs font-semibold text-[var(--color-success)]">
+                      +{t.points}
+                    </span>
                   </Link>
                 ))}
               </div>

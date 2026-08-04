@@ -5,26 +5,44 @@ import { requireOnboardedUser } from "@/lib/session";
 import { getProgramState, type DayStatus } from "@/lib/program";
 import { phaseForDay, PHASES } from "@/lib/config";
 
-// Serpentine road geometry. Nodes wander left/right down the page; a dotted SVG
-// path threads through their centres and the opaque nodes sit on top, so the
-// dots only show in the gaps — matching the "road" mockup (D25).
-const WIDTH = 480;
+// Serpentine road geometry. Nodes wander left/right down the page; a smooth
+// dotted SVG path threads through their centres and the opaque nodes sit on top,
+// so the dots only show in the gaps — matching the "road" mockup (D25).
+const WIDTH = 560;
 const CENTER_X = WIDTH / 2;
-const AMP = 132;
-const ROW_H = 82;
-const PAD_Y = 52;
+const AMP = 168;
+const ROW_H = 76;
+const PAD_Y = 48;
+const TRAIL = "#a99e86"; // warm taupe, darker than the hairline tokens
 
 function nodeX(i: number) {
-  return CENTER_X + Math.sin((i + 0.6) * 0.72) * AMP;
+  return CENTER_X + Math.sin((i + 0.6) * 0.8) * AMP;
+}
+
+// Catmull-Rom through the node centres → cubic beziers, for a soft curvy trail.
+function smoothPath(pts: { x: number; y: number }[]) {
+  if (pts.length < 2) return "";
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
 }
 
 function DayCircle({ day, status }: { day: number; status: DayStatus }) {
-  const base =
-    "flex items-center justify-center rounded-full font-medium transition-colors";
+  const base = "flex items-center justify-center rounded-full font-medium transition-colors";
   if (status === "today") {
     return (
       <div
-        className={`${base} h-16 w-16 bg-[var(--color-accent)] text-[var(--color-accent-fg)] text-lg shadow-[var(--shadow-card)] ring-[6px] ring-[var(--color-accent-subtle)]`}
+        className={`${base} h-[4.5rem] w-[4.5rem] bg-[var(--color-accent)] text-[var(--color-accent-fg)] text-xl shadow-[var(--shadow-card)] ring-2 ring-[var(--color-accent)] ring-offset-[5px] ring-offset-[var(--color-canvas)]`}
       >
         {day}
       </div>
@@ -32,7 +50,7 @@ function DayCircle({ day, status }: { day: number; status: DayStatus }) {
   }
   if (status === "completed") {
     return (
-      <div className={`${base} h-12 w-12 bg-[var(--color-brand-ink)] text-white text-sm`}>
+      <div className={`${base} h-14 w-14 bg-[var(--color-brand-ink)] text-white text-[0.95rem]`}>
         {day}
       </div>
     );
@@ -40,7 +58,7 @@ function DayCircle({ day, status }: { day: number; status: DayStatus }) {
   if (status === "available") {
     return (
       <div
-        className={`${base} h-12 w-12 border-2 border-[var(--color-accent)] bg-[var(--color-surface)] text-[var(--color-accent-subtle-ink)] text-sm`}
+        className={`${base} h-14 w-14 border-2 border-[var(--color-accent)] bg-[var(--color-surface)] text-[var(--color-accent-subtle-ink)] text-[0.95rem]`}
       >
         {day}
       </div>
@@ -48,7 +66,7 @@ function DayCircle({ day, status }: { day: number; status: DayStatus }) {
   }
   return (
     <div
-      className={`${base} h-12 w-12 border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-faint)] text-sm`}
+      className={`${base} h-14 w-14 border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-faint)] text-[0.95rem]`}
     >
       {day}
     </div>
@@ -73,9 +91,7 @@ export default async function JourneyPage() {
     y: PAD_Y + i * ROW_H,
   }));
   const roadHeight = PAD_Y * 2 + (focusDays.length - 1) * ROW_H;
-  const pathD = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
-    .join(" ");
+  const pathD = smoothPath(points);
 
   return (
     <div className="mx-auto max-w-[760px]">
@@ -95,30 +111,26 @@ export default async function JourneyPage() {
 
       {/* Completed phase marker above the road */}
       {prevPhase && (
-        <div className="mb-4 flex justify-center">
+        <div className="mb-3 flex justify-center">
           <Link href={`/journey/phase/${prevPhase.order}`}>
-            <Chip tone="brand" className="gap-1.5 uppercase tracking-wide">
-              Phase {prevPhase.order} · {prevPhase.name} <Check size={13} weight="bold" />
-            </Chip>
+            <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-brand)] shadow-[var(--shadow-card)]">
+              Phase {prevPhase.order} · {prevPhase.name}
+              <Check size={13} weight="bold" className="text-[var(--color-success)]" />
+            </span>
           </Link>
         </div>
       )}
 
       {/* The road */}
       <div className="relative mx-auto" style={{ width: WIDTH, height: roadHeight }}>
-        <svg
-          width={WIDTH}
-          height={roadHeight}
-          className="absolute inset-0"
-          aria-hidden
-        >
+        <svg width={WIDTH} height={roadHeight} className="absolute inset-0" aria-hidden>
           <path
             d={pathD}
             fill="none"
-            stroke="var(--color-line-strong)"
-            strokeWidth={2.5}
+            stroke={TRAIL}
+            strokeWidth={3}
             strokeLinecap="round"
-            strokeDasharray="0.5 11"
+            strokeDasharray="0.5 10"
           />
         </svg>
 
@@ -132,7 +144,7 @@ export default async function JourneyPage() {
               style={{ left: p.x, top: p.y, transform: "translate(-50%, -50%)" }}
             >
               {p.status === "today" && pillLeft && (
-                <span className="mr-3 rounded-[var(--radius-pill)] bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-accent-fg)]">
+                <span className="mr-3 rounded-[var(--radius-pill)] bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-accent-fg)] shadow-[var(--shadow-card)]">
                   Today
                 </span>
               )}
@@ -144,7 +156,7 @@ export default async function JourneyPage() {
                 </Link>
               )}
               {p.status === "today" && !pillLeft && (
-                <span className="ml-3 rounded-[var(--radius-pill)] bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-accent-fg)]">
+                <span className="ml-3 rounded-[var(--radius-pill)] bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-accent-fg)] shadow-[var(--shadow-card)]">
                   Today
                 </span>
               )}
@@ -155,11 +167,15 @@ export default async function JourneyPage() {
 
       {/* Next phase marker below the road */}
       {nextPhase && (
-        <div className="mt-6 flex items-center justify-center gap-2.5 text-sm text-[var(--color-ink-muted)]">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-faint)]">
-            <Flag size={16} />
-          </span>
-          Phase {nextPhase.order} · {nextPhase.name} &mdash; unlocks Day {nextPhase.dayStart}
+        <div className="mt-8 flex justify-center">
+          <div className="inline-flex items-center gap-3 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[var(--color-surface)] py-2 pl-2 pr-5 shadow-[var(--shadow-card)]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-sunken)] text-[var(--color-ink-muted)]">
+              <Flag size={16} />
+            </span>
+            <span className="text-sm text-[var(--color-ink-muted)]">
+              Phase {nextPhase.order} · {nextPhase.name} &mdash; unlocks Day {nextPhase.dayStart}
+            </span>
+          </div>
         </div>
       )}
     </div>
