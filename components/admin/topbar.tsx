@@ -74,7 +74,7 @@ export function AdminTopbar({ alerts = 0 }: { alerts?: number }) {
         </form>
 
         <button
-          onClick={() => router.push("/admin/search")}
+          onClick={() => router.push("/admin/alerts")}
           aria-label="Notifications"
           className="relative flex h-9 w-9 items-center justify-center rounded-full text-[var(--color-ink-muted)] hover:bg-[var(--color-surface-sunken)]"
         >
