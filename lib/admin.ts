@@ -20,6 +20,12 @@ export function effectiveStaffRole(user: User): StaffRole | null {
   return user.staffRole ?? null;
 }
 
+/** True if this user can open the admin panel (owner or a staff role with access). */
+export function hasAdminAccess(user: User): boolean {
+  const role = effectiveStaffRole(user);
+  return !!role && permissionsFor(role).length > 0;
+}
+
 /** Signed-in staff member (owner email or a user with a staffRole). */
 export async function requireStaffRaw(): Promise<AdminUser> {
   const user = await requireUser();

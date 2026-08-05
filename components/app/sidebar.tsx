@@ -10,6 +10,7 @@ import {
   Lifebuoy,
   Phone,
   CaretRight,
+  SquaresFour,
 } from "@phosphor-icons/react";
 import { NAV_ITEMS } from "./nav-items";
 import { cn } from "@/lib/utils";
@@ -22,8 +23,10 @@ const ICONS = {
 
 export function Sidebar({
   user,
+  isAdmin = false,
 }: {
   user: { displayName: string; avatarInitial: string; trustedName?: string | null };
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   // Highlight the tapped item immediately, before the new page finishes loading.
@@ -63,6 +66,25 @@ export function Sidebar({
       </nav>
 
       <div className="flex-1" />
+
+      {/* Admin panel — only for staff/owner accounts */}
+      {isAdmin && (
+        <div className="mb-2 border-t border-white/10 pt-4">
+          <Link
+            href="/admin"
+            onClick={() => setPending("/admin")}
+            className={cn(
+              "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-[0.95rem] transition-colors",
+              current.startsWith("/admin")
+                ? "bg-white/10 font-medium text-white"
+                : "text-white/70 hover:bg-white/5 hover:text-white",
+            )}
+          >
+            <SquaresFour size={22} />
+            Admin panel
+          </Link>
+        </div>
+      )}
 
       {/* Safety + trusted contact */}
       <div className="mb-4 border-t border-white/10 pt-4">

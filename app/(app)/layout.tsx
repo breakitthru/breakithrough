@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/app/sidebar";
 import { DaylightDock } from "@/components/app/daylight-dock";
 import { requireOnboardedUser } from "@/lib/session";
+import { hasAdminAccess } from "@/lib/admin";
 
 /*
   Authenticated member-app shell (desktop). Requires a signed-in, onboarded user;
@@ -14,6 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-dvh bg-[var(--color-canvas)]">
       <Sidebar
+        isAdmin={hasAdminAccess(user)}
         user={{
           displayName: name,
           avatarInitial: name.charAt(0).toUpperCase(),
