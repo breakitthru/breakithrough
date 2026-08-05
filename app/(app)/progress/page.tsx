@@ -17,7 +17,7 @@ export default async function ProgressPage() {
   const preview = badges.slice(0, 4);
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="max-w-[720px]">
         <Link
           href="/today"
