@@ -23,22 +23,25 @@ function nodeX(i: number) {
   return CENTER_X + Math.sin((i + 0.6) * FREQ) * AMP;
 }
 
-// Catmull-Rom through the node centres → cubic beziers, for a soft curvy trail.
-function smoothPath(pts: { x: number; y: number }[]) {
-  if (pts.length < 2) return "";
-  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] ?? pts[i];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[i + 2] ?? p2;
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+// Trace the trail along the actual sine wave (not just straight hops between
+// node centres) by sampling many points per segment. x follows the continuous
+// sine so the curve flows smoothly; y interpolates between node rows. The nodes
+// sit exactly on this curve.
+function tracePath(nodes: { y: number }[]) {
+  if (nodes.length < 2) return "";
+  const STEPS = 20;
+  const cmds = [`M ${nodeX(0).toFixed(1)} ${nodes[0].y.toFixed(1)}`];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const y0 = nodes[i].y;
+    const y1 = nodes[i + 1].y;
+    for (let s = 1; s <= STEPS; s++) {
+      const f = s / STEPS;
+      const x = nodeX(i + f);
+      const y = y0 + (y1 - y0) * f;
+      cmds.push(`L ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
   }
-  return d;
+  return cmds.join(" ");
 }
 
 function DayCircle({ day, status }: { day: number; status: DayStatus }) {
@@ -136,7 +139,7 @@ export function JourneyRoad({
     return { ...d, x: nodeX(i), y };
   });
   const roadHeight = (nodes[nodes.length - 1]?.y ?? PAD_Y) + PAD_Y;
-  const pathD = smoothPath(nodes);
+  const pathD = tracePath(nodes);
 
   const firstYByPhase: Record<number, number> = {};
   for (const n of nodes) {
