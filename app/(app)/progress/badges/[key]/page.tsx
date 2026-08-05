@@ -26,32 +26,36 @@ export default async function BadgeDetailPage({
 
   return (
     <div className="mx-auto flex min-h-[70dvh] max-w-[560px] flex-col items-center justify-center text-center">
-      {/* Emblem: evergreen disc, clay ring, soft glow */}
-      <div className="relative flex h-56 w-56 items-center justify-center">
+      {/* Emblem: evergreen disc inside a thin clay ring, over a soft warm glow.
+          Earned badges pulse slow clay rings outward. */}
+      <div className="relative flex h-64 w-64 items-center justify-center">
         {badge.earned && (
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle, var(--color-accent-subtle) 0%, transparent 62%)",
-            }}
-          />
+          <>
+            <div
+              className="pointer-events-none absolute h-64 w-64 rounded-full"
+              style={{
+                background:
+                  "radial-gradient(circle, var(--color-accent-subtle) 0%, transparent 60%)",
+              }}
+            />
+            <span className="badge-ripple" />
+            <span className="badge-ripple [animation-delay:1.2s]" />
+            <span className="badge-ripple [animation-delay:2.4s]" />
+          </>
         )}
         <div
-          className={`flex h-40 w-40 items-center justify-center rounded-full ${
-            badge.earned
-              ? "ring-2 ring-[var(--color-accent)] ring-offset-[14px] ring-offset-[var(--color-canvas)]"
-              : ""
+          className={`relative flex h-44 w-44 items-center justify-center rounded-full ${
+            badge.earned ? "border border-[var(--color-accent)]" : ""
           }`}
         >
           <span
-            className={`flex h-24 w-24 items-center justify-center rounded-full ${
+            className={`flex h-28 w-28 items-center justify-center rounded-full ${
               badge.earned
-                ? "bg-[var(--color-brand-ink)] text-white"
+                ? "bg-[var(--color-brand-ink)] text-white shadow-[var(--shadow-card)]"
                 : "border-2 border-[var(--color-line-strong)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-faint)]"
             }`}
           >
-            {badge.earned ? <Icon size={40} weight="fill" /> : <Lock size={34} />}
+            {badge.earned ? <Icon size={44} weight="fill" /> : <Lock size={34} />}
           </span>
         </div>
       </div>

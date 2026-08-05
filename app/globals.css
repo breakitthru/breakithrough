@@ -130,6 +130,32 @@ body {
   will-change: clip-path, opacity, transform;
 }
 
+/* Earned-badge emblem: thin clay rings that emerge from the disc, drift
+   outward, and fade — a slow, continuous pulse. */
+@keyframes badge-ripple {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  70% {
+    opacity: 0.12;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+.badge-ripple {
+  position: absolute;
+  height: 11rem;
+  width: 11rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-accent);
+  animation: badge-ripple 3.6s ease-out infinite;
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
