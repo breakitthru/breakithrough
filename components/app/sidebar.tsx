@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -25,6 +26,10 @@ export function Sidebar({
   user: { displayName: string; avatarInitial: string; trustedName?: string | null };
 }) {
   const pathname = usePathname();
+  // Highlight the tapped item immediately, before the new page finishes loading.
+  const [pending, setPending] = useState<string | null>(null);
+  useEffect(() => setPending(null), [pathname]);
+  const current = pending ?? pathname;
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-[264px] flex-col bg-[var(--color-brand-ink)] px-4 py-6 text-[var(--color-brand-fg)]">
@@ -37,11 +42,12 @@ export function Sidebar({
       <nav className="flex flex-col gap-1">
         {NAV_ITEMS.map((item) => {
           const Icon = ICONS[item.icon];
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+          const active = current === item.href || current.startsWith(item.href + "/");
           return (
             <Link
               key={item.key}
               href={item.href}
+              onClick={() => setPending(item.href)}
               className={cn(
                 "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-[0.95rem] transition-colors",
                 active
@@ -62,9 +68,10 @@ export function Sidebar({
       <div className="mb-4 border-t border-white/10 pt-4">
         <Link
           href="/sos"
+          onClick={() => setPending("/sos")}
           className={cn(
             "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-[0.95rem] font-medium transition-colors",
-            pathname === "/sos"
+            current === "/sos"
               ? "bg-white/10 text-[var(--color-accent)]"
               : "text-[var(--color-accent)] hover:bg-white/5",
           )}
@@ -86,9 +93,10 @@ export function Sidebar({
       {/* Account */}
       <Link
         href="/profile"
+        onClick={() => setPending("/profile")}
         className={cn(
           "flex items-center gap-3 rounded-[var(--radius-pill)] px-2 py-2 transition-colors hover:bg-white/5",
-          pathname.startsWith("/profile") && "bg-white/10",
+          current.startsWith("/profile") && "bg-white/10",
         )}
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-accent)] text-sm font-semibold text-[var(--color-accent-fg)]">

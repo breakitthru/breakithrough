@@ -111,6 +111,12 @@ body {
   color: var(--color-accent-subtle-ink);
 }
 
+/* Tactile press feedback for clickable cards (a card wrapped in a link), so a
+   tap feels instant even while the next page loads. No colour or size change. */
+a:active [data-card] {
+  transform: translateY(1px);
+}
+
 /* Daylight chat opens by expanding out of the dock in the bottom-right corner. */
 @keyframes daylight-reveal {
   from {
