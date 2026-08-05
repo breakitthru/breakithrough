@@ -44,23 +44,38 @@ export default async function BadgeDetailPage({
           </>
         )}
         <div
-          className={`relative flex h-44 w-44 items-center justify-center rounded-full ${
-            badge.earned ? "border border-[var(--color-accent)]" : ""
-          }`}
+          className="relative flex h-44 w-44 items-center justify-center rounded-full"
+          style={
+            badge.earned
+              ? { border: "1px solid var(--color-accent)" }
+              : undefined
+          }
         >
           <span
-            className={`flex h-28 w-28 items-center justify-center rounded-full ${
+            className="flex h-28 w-28 items-center justify-center rounded-full"
+            style={
               badge.earned
-                ? "bg-[var(--color-brand-ink)] text-white shadow-[var(--shadow-card)]"
-                : "border-2 border-[var(--color-line-strong)] bg-[var(--color-surface-sunken)] text-[var(--color-ink-faint)]"
-            }`}
+                ? {
+                    backgroundColor: "var(--color-brand-ink)",
+                    color: "#ffffff",
+                    boxShadow: "var(--shadow-card)",
+                  }
+                : {
+                    border: "2px solid var(--color-line-strong)",
+                    backgroundColor: "var(--color-surface-sunken)",
+                    color: "var(--color-ink-faint)",
+                  }
+            }
           >
             {badge.earned ? <Icon size={44} weight="fill" /> : <Lock size={34} />}
           </span>
         </div>
       </div>
 
-      <p className="eyebrow mt-8 text-[var(--color-accent)]">
+      <p
+        className="eyebrow mt-8"
+        style={badge.earned ? { color: "var(--color-accent)" } : undefined}
+      >
         {badge.earned ? "Badge earned" : "Locked badge"}
       </p>
       <h1 className="font-display mt-2 text-[2.5rem] leading-tight text-[var(--color-ink)]">
