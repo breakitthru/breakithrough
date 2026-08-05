@@ -22,6 +22,16 @@ enum Role {
   ADMIN
 }
 
+// Admin/staff roles (RBAC). Null staffRole on a User = not staff.
+// OWNER is also granted implicitly to the hard-coded owner email (see lib/admin.ts).
+enum StaffRole {
+  OWNER
+  OPS
+  CLINICIAN
+  MODERATOR
+  SPECIALIST
+}
+
 enum PlanStatus {
   TRIAL // days 1-4, no card taken
   ACTIVE // paid the ₹999 one-time
@@ -41,12 +51,18 @@ model User {
   displayName String?
   avatarKey   String? // selected avatar (Cloudflare/R2 key or preset id)
 
+  // ── Staff / admin (RBAC + 2FA) ──
+  staffRole       StaffRole? // null = ordinary member
+  totpSecret      String? // base32 TOTP secret (staff 2FA)
+  totpConfirmedAt DateTime? // set once the staff member verifies their authenticator
+  deletedAt       DateTime? // DPDP: set when the account is anonymised/erased
+
   // ── Onboarding / intake ──
-  onboardedAt     DateTime?
-  intake          Json? // questionnaire answers (stored, not scored in v1)
-  whyIStarted     String? // read back to the user inside the SOS flow
-  trustedName     String? // trusted contact — used as a tel: button in SOS
-  trustedPhone    String?
+  onboardedAt  DateTime?
+  intake       Json? // questionnaire answers (stored, not scored in v1)
+  whyIStarted  String? // read back to the user inside the SOS flow
+  trustedName  String? // trusted contact — used as a tel: button in SOS
+  trustedPhone String?
 
   // ── Program state ──
   plan             PlanStatus @default(TRIAL)
@@ -56,24 +72,24 @@ model User {
   completedAt      DateTime?
 
   // ── Gamification (ledger is authoritative; these are fast-read caches) ──
-  pointsBalance     Int       @default(0)
-  streakCurrent     Int       @default(0)
-  streakLongest     Int       @default(0)
-  lastCompletedDay  Int? // program day number of last completion
+  pointsBalance    Int  @default(0)
+  streakCurrent    Int  @default(0)
+  streakLongest    Int  @default(0)
+  lastCompletedDay Int? // program day number of last completion
 
-  accounts        Account[]
-  sessions        Session[]
-  completions     TaskCompletion[]
-  points          PointsLedger[]
-  badges          UserBadge[]
-  reflections     Reflection[]
-  moods           MoodLog[]
-  consent         Consent?
-  sosEvents       SosEvent[]
-  redemptions     Redemption[]
-  payments        Payment[]
-  chatMessages    ChatMessage[]
-  notifications   Notification[]
+  accounts      Account[]
+  sessions      Session[]
+  completions   TaskCompletion[]
+  points        PointsLedger[]
+  badges        UserBadge[]
+  reflections   Reflection[]
+  moods         MoodLog[]
+  consent       Consent?
+  sosEvents     SosEvent[]
+  redemptions   Redemption[]
+  payments      Payment[]
+  chatMessages  ChatMessage[]
+  notifications Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -145,11 +161,11 @@ model Phase {
 }
 
 model Day {
-  id         String  @id @default(cuid())
-  dayNumber  Int // 1..60
-  phaseId    String
-  phase      Phase   @relation(fields: [phaseId], references: [id], onDelete: Cascade)
-  title      String? // e.g. "Day 12"
+  id          String  @id @default(cuid())
+  dayNumber   Int // 1..60
+  phaseId     String
+  phase       Phase   @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  title       String? // e.g. "Day 12"
   isMilestone Boolean @default(false)
 
   tasks  Task[]
@@ -324,26 +340,28 @@ enum SosDoor {
 }
 
 model SosEvent {
-  id        String   @id @default(cuid())
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  door      SosDoor
-  rodeOut   Boolean  @default(false)
-  note      String?
-  createdAt DateTime @default(now())
+  id           String    @id @default(cuid())
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  door         SosDoor
+  rodeOut      Boolean   @default(false)
+  note         String?
+  reviewedAt   DateTime? // set when a staff member opens/reviews the event (stops escalation)
+  reviewedById String? // staff user id who reviewed it
+  createdAt    DateTime  @default(now())
 
   @@index([userId])
 }
 
 model Helpline {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   name      String
   phone     String
   hours     String?
   languages String?
-  order     Int      @default(0)
-  region    String?  @default("IN")
-  active    Boolean  @default(true)
+  order     Int     @default(0)
+  region    String? @default("IN")
+  active    Boolean @default(true)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -377,14 +395,14 @@ enum RedemptionStatus {
 }
 
 model Redemption {
-  id         String           @id @default(cuid())
-  userId     String
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rewardId   String
-  reward     Reward           @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rewardId    String
+  reward      Reward           @relation(fields: [rewardId], references: [id], onDelete: Cascade)
   pointsSpent Int
-  status     RedemptionStatus @default(REQUESTED)
-  createdAt  DateTime         @default(now())
+  status      RedemptionStatus @default(REQUESTED)
+  createdAt   DateTime         @default(now())
 
   @@index([userId])
 }
@@ -449,4 +467,61 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Admin workspace — audit, staff invites, DPDP tombstones, policies.
+//  Actor references are plain string ids (append-only logs), not FKs.
+// ─────────────────────────────────────────────────────────────
+
+// Append-only audit trail. Never edited. Filtering does not write; exporting does.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String? // staff user id (null for system)
+  actorEmail String?
+  action     String // e.g. "task.update", "member.delete", "audit.export"
+  targetType String? // e.g. "Task", "User", "Reward"
+  targetId   String?
+  summary    String // human-readable one-liner
+  meta       Json? // before/after or extra context
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
+}
+
+// Staff invitations. Accepted via a token link (email delivery optional).
+model StaffInvite {
+  id          String    @id @default(cuid())
+  email       String
+  staffRole   StaffRole
+  token       String    @unique
+  invitedById String?
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email])
+}
+
+// DPDP: what legally survives an erasure. No name lives on this record.
+model DeletedAccount {
+  id               String   @id @default(cuid())
+  pseudoId         String   @unique // e.g. "M-8842"
+  deletedAt        DateTime @default(now())
+  deletedById      String? // staff user id who performed the deletion
+  retentionReasons Json // e.g. ["tax", "payment records"]
+  paymentsRetained Int      @default(0)
+  note             String?
+}
+
+// Versioned legal/policy documents managed in Settings → Legal.
+model Policy {
+  id        String    @id @default(cuid())
+  key       String    @unique // "privacy", "terms", "refunds", "clinical-disclaimer"
+  title     String
+  version   Int       @default(1)
+  body      String    @db.Text
+  liveSince DateTime?
+  updatedAt DateTime  @updatedAt
 }
