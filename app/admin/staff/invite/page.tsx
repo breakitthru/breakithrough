@@ -11,7 +11,7 @@ export default async function InviteStaffPage() {
       <Link href="/admin/staff" className="mb-4 inline-flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]">
         <ArrowLeft size={16} /> Staff
       </Link>
-      <PageHeader eyebrow="Workspace" title="Invite staff" subtitle="Create an invite, share the link, they enrol 2FA on first sign-in." />
+      <PageHeader eyebrow="Workspace" title="Invite staff" subtitle="Create an invite and share the link. They sign in with that email to accept." />
       <InviteForm />
     </>
   );

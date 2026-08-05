@@ -15,14 +15,14 @@ export function AcceptInvite({ token, role, email }: { token: string; role: stri
       setError(null);
       const res = await acceptInvite(token);
       if (!res.ok) { setError(res.error); return; }
-      router.push("/admin/security/enroll");
+      router.push("/admin");
     });
 
   return (
     <div>
       <p className="text-sm text-[var(--color-ink-muted)]">
         You&rsquo;ve been invited to join Break It Through as <span className="font-medium text-[var(--color-ink)]">{role[0] + role.slice(1).toLowerCase()}</span> ({email}).
-        Accept to get access, then set up two-factor.
+        Accept to get access.
       </p>
       {error && <p className="mt-3 text-sm text-[var(--color-crisis)]">{error}</p>}
       <Button size="lg" variant="primary" onClick={accept} disabled={pending} className="mt-5 w-full">

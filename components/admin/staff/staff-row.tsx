@@ -13,14 +13,12 @@ export function StaffRow({
   name,
   email,
   role,
-  twoFa,
   isOwnerEmail,
 }: {
   id: string;
   name: string;
   email: string;
   role: StaffRole;
-  twoFa: boolean;
   isOwnerEmail: boolean;
 }) {
   const router = useRouter();
@@ -51,9 +49,6 @@ export function StaffRow({
             {ROLES.map((r) => <option key={r} value={r}>{r[0] + r.slice(1).toLowerCase()}</option>)}
           </select>
         )}
-      </td>
-      <td className="px-3 py-3">
-        {twoFa ? <Chip tone="success">on</Chip> : <Chip tone="caution">pending</Chip>}
       </td>
       <td className="px-3 py-3 text-right">
         {!isOwnerEmail && (

@@ -13,7 +13,7 @@ export default async function StaffPage() {
   const staff = await prisma.user.findMany({
     where: { staffRole: { not: null } },
     orderBy: { createdAt: "asc" },
-    select: { id: true, email: true, displayName: true, name: true, staffRole: true, totpConfirmedAt: true },
+    select: { id: true, email: true, displayName: true, name: true, staffRole: true },
   });
 
   return (
@@ -21,7 +21,7 @@ export default async function StaffPage() {
       <PageHeader
         eyebrow="Workspace"
         title="Staff & roles"
-        subtitle="Everyone with a sign-in. 2FA is required for all staff."
+        subtitle="Everyone with a sign-in."
         actions={
           <Link href="/admin/staff/invite" className="rounded-[var(--radius-pill)] bg-[var(--color-brand)] px-4 py-2 text-sm font-medium text-[var(--color-brand-fg)] hover:bg-[var(--color-brand-hover)]">
             Invite someone
@@ -35,7 +35,6 @@ export default async function StaffPage() {
             <tr className="border-b border-[var(--color-line)] text-left text-xs uppercase tracking-wide text-[var(--color-ink-faint)]">
               <th className="px-5 py-3 font-medium">Person</th>
               <th className="px-3 py-3 font-medium">Role</th>
-              <th className="px-3 py-3 font-medium">2FA</th>
               <th className="px-3 py-3" />
             </tr>
           </thead>
@@ -47,12 +46,11 @@ export default async function StaffPage() {
                 name={s.displayName ?? s.name ?? s.email ?? "Staff"}
                 email={s.email ?? "—"}
                 role={s.staffRole!}
-                twoFa={!!s.totpConfirmedAt}
                 isOwnerEmail={!!s.email && OWNER_EMAILS.includes(s.email.toLowerCase())}
               />
             ))}
             {staff.length === 0 && (
-              <tr><td colSpan={4} className="px-5 py-8 text-center text-[var(--color-ink-muted)]">Only the owner has access. Invite someone to share the load.</td></tr>
+              <tr><td colSpan={3} className="px-5 py-8 text-center text-[var(--color-ink-muted)]">Only the owner has access. Invite someone to share the load.</td></tr>
             )}
           </tbody>
         </table>

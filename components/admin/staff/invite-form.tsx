@@ -42,7 +42,7 @@ export function InviteForm() {
         <div className="mt-5 rounded-[var(--radius-md)] bg-[var(--color-surface-sunken)] p-4">
           <p className="text-sm font-medium text-[var(--color-ink)]">Invite ready.</p>
           <p className="mt-1 text-xs text-[var(--color-ink-muted)]">
-            Email delivery isn&rsquo;t wired yet — send this link to them. They sign in with the invited email, accept, then set up 2FA.
+            Email delivery isn&rsquo;t wired yet — send this link to them. They sign in with the invited email and accept.
           </p>
           <input readOnly value={link} onClick={(e) => e.currentTarget.select()} className="mt-2 w-full rounded-[var(--radius-sm)] border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 py-2 font-mono text-xs text-[var(--color-ink)]" />
         </div>
