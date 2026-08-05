@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getConfig, phaseForDay } from "@/lib/config";
+import { getConfig, phaseForDayIn, getPhases } from "@/lib/config";
 import type { User } from "@prisma/client";
 
 /*
@@ -136,7 +136,7 @@ export async function getDayView(userId: string, dayNumber: number): Promise<Day
     select: { taskId: true },
   });
   const done = new Set(completions.map((c) => c.taskId));
-  const phase = phaseForDay(dayNumber);
+  const phase = phaseForDayIn(await getPhases(), dayNumber);
 
   const tasks: TaskView[] = day.tasks.map((t) => ({
     id: t.id,

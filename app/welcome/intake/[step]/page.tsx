@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { SplitCanvas } from "@/components/onboarding/split-canvas";
 import { IntakeForm } from "@/components/onboarding/intake-form";
-import { INTAKE_QUESTIONS } from "@/lib/onboarding";
+import { getIntakeQuestions } from "@/lib/onboarding";
 
 export default async function IntakeStepPage({
   params,
@@ -10,7 +10,8 @@ export default async function IntakeStepPage({
 }) {
   const { step } = await params;
   const n = Number(step);
-  const question = INTAKE_QUESTIONS.find((q) => q.step === n);
+  const questions = await getIntakeQuestions();
+  const question = questions.find((q) => q.step === n);
   if (!question) notFound();
 
   const backHref = n > 1 ? `/welcome/intake/${n - 1}` : "/login";
@@ -31,7 +32,7 @@ export default async function IntakeStepPage({
         author: "Dr. Ananya Rao · Clinical Psychologist",
       }}
     >
-      <IntakeForm question={question} total={INTAKE_QUESTIONS.length} />
+      <IntakeForm question={question} total={questions.length} />
     </SplitCanvas>
   );
 }

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getConfig, phaseForDay, PHASES } from "@/lib/config";
+import { getConfig, phaseForDayIn, getPhases } from "@/lib/config";
 
 /*
   Read-only aggregation for the admin Overview. Computes each onboarded member's
@@ -50,7 +50,12 @@ export type OverviewMetrics = {
 
 export async function getOverviewMetrics(): Promise<OverviewMetrics> {
   const config = await getConfig();
+  const phases = await getPhases();
   const programDays: number = config.programDays;
+  const phaseName = (day: number) => {
+    const p = phaseForDayIn(phases, day);
+    return `${p.order} · ${p.name}`;
+  };
 
   const members = await prisma.user.findMany({
     where: { onboardedAt: { not: null }, deletedAt: null, staffRole: null },
@@ -125,7 +130,7 @@ export async function getOverviewMetrics(): Promise<OverviewMetrics> {
       id: e.user.id,
       name: nameOf(e.user),
       day,
-      phaseName: `${phaseForDay(day).order} · ${phaseForDay(day).name}`,
+      phaseName: phaseName(day),
       streak: e.user.streakCurrent,
       points: e.user.pointsBalance,
       lastActive: e.user.updatedAt,
@@ -141,7 +146,7 @@ export async function getOverviewMetrics(): Promise<OverviewMetrics> {
       id: p.user.id,
       name: nameOf(p.user),
       day,
-      phaseName: `${phaseForDay(day).order} · ${phaseForDay(day).name}`,
+      phaseName: phaseName(day),
       streak: p.user.streakCurrent,
       points: p.user.pointsBalance,
       lastActive: p.user.updatedAt,
@@ -194,7 +199,7 @@ export async function getOverviewMetrics(): Promise<OverviewMetrics> {
     sosUnresolved,
     perDay,
     medianDay,
-    phases: PHASES.map((p) => ({
+    phases: phases.map((p) => ({
       order: p.order,
       name: p.name,
       dayStart: p.dayStart,

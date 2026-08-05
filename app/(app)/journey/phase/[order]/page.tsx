@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@/components/ui/card";
-import { PHASES } from "@/lib/config";
+import { getPhases } from "@/lib/config";
 import { requireOnboardedUser } from "@/lib/session";
 import { getProgramState } from "@/lib/program";
 
@@ -12,7 +12,8 @@ export default async function PhaseDetailPage({
   params: Promise<{ order: string }>;
 }) {
   const { order } = await params;
-  const phase = PHASES.find((p) => p.order === Number(order));
+  const phases = await getPhases();
+  const phase = phases.find((p) => p.order === Number(order));
   if (!phase) notFound();
 
   const user = await requireOnboardedUser();

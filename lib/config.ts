@@ -47,3 +47,27 @@ export const PHASES = [
 export function phaseForDay(day: number) {
   return PHASES.find((p) => day >= p.dayStart && day <= p.dayEnd) ?? PHASES[0];
 }
+
+export type PhaseDef = { order: number; name: string; dayStart: number; dayEnd: number };
+
+/**
+ * Phases from the DB Phase table (admin-editable), falling back to the constant
+ * above if the table is empty or unreachable. Member surfaces read this so
+ * admin phase edits (names / day ranges) take effect.
+ */
+export async function getPhases(): Promise<PhaseDef[]> {
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    const rows = await prisma.phase.findMany({ orderBy: { order: "asc" } });
+    if (rows.length > 0) {
+      return rows.map((r) => ({ order: r.order, name: r.name, dayStart: r.dayStart, dayEnd: r.dayEnd }));
+    }
+  } catch {
+    // fall through to the constant
+  }
+  return PHASES.map((p) => ({ ...p }));
+}
+
+export function phaseForDayIn(phases: PhaseDef[], day: number): PhaseDef {
+  return phases.find((p) => day >= p.dayStart && day <= p.dayEnd) ?? phases[0];
+}

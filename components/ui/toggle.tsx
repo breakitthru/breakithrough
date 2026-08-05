@@ -2,12 +2,32 @@
 
 import { useState } from "react";
 
-/** Standalone on/off switch bound to local state (visual; no persistence yet). */
-export function Toggle({ defaultOn = false }: { defaultOn?: boolean }) {
-  const [on, setOn] = useState(defaultOn);
+/**
+ * On/off switch. Uncontrolled by default (defaultOn); pass `checked` + `onChange`
+ * to control it (used by admin editors).
+ */
+export function Toggle({
+  defaultOn = false,
+  checked,
+  onChange,
+  disabled,
+}: {
+  defaultOn?: boolean;
+  checked?: boolean;
+  onChange?: (next: boolean) => void;
+  disabled?: boolean;
+}) {
+  const [internal, setInternal] = useState(defaultOn);
+  const on = checked ?? internal;
+  const toggle = () => {
+    const next = !on;
+    onChange?.(next);
+    if (checked === undefined) setInternal(next);
+  };
   return (
     <button
-      onClick={() => setOn((v) => !v)}
+      onClick={toggle}
+      disabled={disabled}
       role="switch"
       aria-checked={on}
       className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${

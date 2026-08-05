@@ -11,7 +11,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { requireOnboardedUser } from "@/lib/session";
 import { getProgramState } from "@/lib/program";
-import { phaseForDay, getConfig } from "@/lib/config";
+import { phaseForDayIn, getPhases, getConfig } from "@/lib/config";
 import { SignOutRow } from "@/components/app/sign-out";
 
 function Row({
@@ -54,7 +54,7 @@ export default async function ProfilePage() {
   const config = await getConfig();
   const state = await getProgramState(user);
   const today = state.resumeDay;
-  const phase = phaseForDay(today);
+  const phase = phaseForDayIn(await getPhases(), today);
   const name = user.displayName ?? user.name ?? "You";
 
   return (

@@ -10,6 +10,23 @@ export type IntakeQuestion = {
   options: IntakeOption[];
 };
 
+/**
+ * Intake questions from SiteConfig ("intakeQuestions"), falling back to the
+ * constant below. The onboarding flow reads this so the admin can edit them.
+ */
+export async function getIntakeQuestions(): Promise<IntakeQuestion[]> {
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    const row = await prisma.siteConfig.findUnique({ where: { key: "intakeQuestions" } });
+    if (row?.value && Array.isArray(row.value)) {
+      return row.value as unknown as IntakeQuestion[];
+    }
+  } catch {
+    // fall through to the constant
+  }
+  return INTAKE_QUESTIONS;
+}
+
 export const INTAKE_QUESTIONS: IntakeQuestion[] = [
   {
     step: 1,
