@@ -20,6 +20,11 @@ function currentDay(start: Date | null, programDays: number, rollover: number): 
   return Math.min(programDays, Math.max(1, diff + 1));
 }
 
+/** Public helper: a member's current program day. */
+export function memberCurrentDay(start: Date | null, programDays: number, rolloverHour: number): number {
+  return currentDay(start, programDays, rolloverHour);
+}
+
 export type NeedsLookRow = {
   id: string;
   name: string;
