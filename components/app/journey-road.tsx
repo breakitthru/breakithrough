@@ -12,14 +12,15 @@ import type { DayStatus } from "@/lib/program";
 */
 const WIDTH = 560;
 const CENTER_X = WIDTH / 2;
-const AMP = 168;
-const ROW_H = 76;
+const AMP = 140;
+const ROW_H = 96;
+const FREQ = 0.46; // gentler wave so the trail flows instead of zig-zagging
 const PAD_Y = 60;
 const PHASE_GAP = 72; // extra breathing room + room for the phase marker
 const TRAIL = "#a99e86";
 
 function nodeX(i: number) {
-  return CENTER_X + Math.sin((i + 0.6) * 0.8) * AMP;
+  return CENTER_X + Math.sin((i + 0.6) * FREQ) * AMP;
 }
 
 // Catmull-Rom through the node centres → cubic beziers, for a soft curvy trail.
