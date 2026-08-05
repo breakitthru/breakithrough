@@ -134,14 +134,14 @@ body {
    outward, and fade — a slow, continuous pulse. */
 @keyframes badge-ripple {
   0% {
-    transform: scale(0.6);
-    opacity: 0.55;
+    transform: scale(0.62);
+    opacity: 0;
   }
-  70% {
-    opacity: 0.12;
+  18% {
+    opacity: 0.5;
   }
   100% {
-    transform: scale(1.55);
+    transform: scale(1.62);
     opacity: 0;
   }
 }

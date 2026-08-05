@@ -39,18 +39,10 @@ export default async function BadgeDetailPage({
               }}
             />
             <span className="badge-ripple" />
-            <span className="badge-ripple [animation-delay:1.2s]" />
-            <span className="badge-ripple [animation-delay:2.4s]" />
+            <span className="badge-ripple [animation-delay:1.8s]" />
           </>
         )}
-        <div
-          className="relative flex h-44 w-44 items-center justify-center rounded-full"
-          style={
-            badge.earned
-              ? { border: "1px solid var(--color-accent)" }
-              : undefined
-          }
-        >
+        <div className="relative flex h-44 w-44 items-center justify-center rounded-full">
           <span
             className="flex h-28 w-28 items-center justify-center rounded-full"
             style={
