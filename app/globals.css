@@ -160,11 +160,11 @@ body {
    node's outer ring and fade after a short distance. */
 @keyframes node-ripple {
   0% {
-    transform: scale(0.9);
+    transform: scale(1);
     opacity: 0.75;
   }
   100% {
-    transform: scale(1.32);
+    transform: scale(1.4);
     opacity: 0;
   }
 }
@@ -173,10 +173,10 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  height: 5.5rem;
-  width: 5.5rem;
-  margin-left: -2.75rem;
-  margin-top: -2.75rem;
+  height: 4.5rem;
+  width: 4.5rem;
+  margin-left: -2.25rem;
+  margin-top: -2.25rem;
   border-radius: 9999px;
   border: 2px solid var(--color-accent);
   animation: node-ripple 2.8s ease-out infinite;
