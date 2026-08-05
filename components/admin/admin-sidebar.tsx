@@ -13,6 +13,7 @@ import {
   VideoCamera,
   CurrencyInr,
   IdentificationBadge,
+  ClipboardText,
   Gear,
   type Icon,
 } from "@phosphor-icons/react";
@@ -31,6 +32,7 @@ const ICONS: Record<string, Icon> = {
   sessions: VideoCamera,
   money: CurrencyInr,
   staff: IdentificationBadge,
+  audit: ClipboardText,
   settings: Gear,
 };
 

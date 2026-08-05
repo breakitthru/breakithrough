@@ -50,6 +50,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Workspace",
     items: [
       { key: "staff", label: "Staff", href: "/admin/staff", icon: "staff", permission: "staff.manage" },
+      { key: "audit", label: "Audit log", href: "/admin/audit", icon: "audit", permission: "audit.view" },
       { key: "settings", label: "Settings", href: "/admin/settings", icon: "settings", permission: "settings.edit" },
     ],
   },
