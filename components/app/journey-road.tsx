@@ -12,12 +12,12 @@ import type { DayStatus } from "@/lib/program";
 */
 const WIDTH = 560;
 const CENTER_X = WIDTH / 2;
-const AMP = 140;
-const ROW_H = 96;
-const FREQ = 0.46; // gentler wave so the trail flows instead of zig-zagging
+const AMP = 132;
+const ROW_H = 84;
+const FREQ = 0.8; // tighter wave — more oscillations packed down the page
 const PAD_Y = 60;
 const PHASE_GAP = 72; // extra breathing room + room for the phase marker
-const TRAIL = "#a99e86";
+const TRAIL = "#33503f"; // dark evergreen dots
 
 function nodeX(i: number) {
   return CENTER_X + Math.sin((i + 0.6) * FREQ) * AMP;
@@ -78,7 +78,7 @@ function DayCircle({ day, status }: { day: number; status: DayStatus }) {
   }
   return (
     <div
-      className={`${base} h-14 w-14 border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-ink-faint)] text-[0.95rem]`}
+      className={`${base} h-14 w-14 border border-[var(--color-line-strong)] bg-[var(--color-surface)] text-[var(--color-brand-subtle-ink)] text-[0.95rem]`}
     >
       {day}
     </div>
