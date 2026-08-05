@@ -43,8 +43,8 @@ function DayCircle({ day, status }: { day: number; status: DayStatus }) {
     return (
       <div className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center">
         <span className="node-ripple" />
-        <span className="node-ripple [animation-delay:1.2s]" />
-        <span className="node-ripple [animation-delay:2.4s]" />
+        <span className="node-ripple [animation-delay:0.93s]" />
+        <span className="node-ripple [animation-delay:1.86s]" />
         <div
           className={`${base} relative h-[4.5rem] w-[4.5rem] bg-[var(--color-accent)] text-[var(--color-accent-fg)] text-xl shadow-[var(--shadow-card)] ring-2 ring-[var(--color-accent)] ring-offset-[5px] ring-offset-[var(--color-canvas)]`}
         >

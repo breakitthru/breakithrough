@@ -156,18 +156,30 @@ body {
   will-change: transform, opacity;
 }
 
-/* Same pulse, sized for the current-day node on the journey road. */
+/* Current-day node on the journey road: thick clay rings that emerge from the
+   node's outer ring and fade after a short distance. */
+@keyframes node-ripple {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1.32);
+    opacity: 0;
+  }
+}
+
 .node-ripple {
   position: absolute;
   left: 50%;
   top: 50%;
-  height: 4.5rem;
-  width: 4.5rem;
-  margin-left: -2.25rem;
-  margin-top: -2.25rem;
+  height: 5.5rem;
+  width: 5.5rem;
+  margin-left: -2.75rem;
+  margin-top: -2.75rem;
   border-radius: 9999px;
-  border: 1px solid var(--color-accent);
-  animation: badge-ripple 3.6s ease-out infinite;
+  border: 2px solid var(--color-accent);
+  animation: node-ripple 2.8s ease-out infinite;
   will-change: transform, opacity;
   pointer-events: none;
 }
