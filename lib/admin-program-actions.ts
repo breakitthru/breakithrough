@@ -273,5 +273,6 @@ export async function setConfigValue(key: string, value: unknown): Promise<Actio
   revalidatePath("/admin/program/rules");
   revalidatePath("/today");
   revalidatePath("/journey");
+  revalidatePath("/reflections/new");
   return { ok: true };
 }

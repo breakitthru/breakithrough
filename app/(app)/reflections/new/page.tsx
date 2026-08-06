@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { requireOnboardedUser } from "@/lib/session";
+import { getConfig } from "@/lib/config";
 import { ReflectionEditor } from "@/components/app/reflection-editor";
-
-const PROMPT = "What's one thing you noticed today?";
 
 export default async function NewReflectionPage() {
   await requireOnboardedUser();
+  const { reflectionPrompt: PROMPT } = await getConfig();
   return (
     <div className="mx-auto max-w-[680px]">
       <Link

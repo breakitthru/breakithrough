@@ -35,6 +35,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Members",
     items: [
       { key: "members", label: "Members", href: "/admin/members", icon: "members", permission: "members.view" },
+      { key: "announcements", label: "Announcements", href: "/admin/announcements", icon: "announcements", permission: "notify.send" },
       { key: "safety", label: "Safety", href: "/admin/safety", icon: "safety", permission: "safety.view" },
       { key: "community", label: "Community", href: "/admin/community", icon: "community", comingSoon: true },
     ],

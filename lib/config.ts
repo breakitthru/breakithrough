@@ -13,6 +13,7 @@ export const CONFIG_DEFAULTS = {
   dayCompleteBonus: 1, // all mandatory tasks in a day
   sosRideOutPoints: 1, // max 1/day
   reflectionPoints: 1, // max 1/day
+  reflectionPrompt: "What's one thing you noticed today?", // daily journaling prompt shown to members
   rupeePerPoint: null as number | null, // UNSET by design — blocks reward pricing until the client decides
   dayRolloverHour: 0, // midnight; day boundary in IST
   timezone: "Asia/Kolkata",

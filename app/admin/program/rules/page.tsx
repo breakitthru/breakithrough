@@ -20,6 +20,7 @@ export default async function RulesPage() {
           { key: "pointsPerTask", label: "Points per task", value: config.pointsPerTask },
           { key: "dayCompleteBonus", label: "Bonus for finishing a day", value: config.dayCompleteBonus },
           { key: "reflectionPoints", label: "Points per reflection (max 1/day)", value: config.reflectionPoints },
+          { key: "reflectionPrompt", label: "Daily reflection prompt", value: config.reflectionPrompt, kind: "text", hint: "The question members see when writing today's reflection." },
           { key: "sosRideOutPoints", label: "Points for riding out an urge (max 1/day)", value: config.sosRideOutPoints },
           { key: "dayRolloverHour", label: "Day rollover hour (IST, 0–23)", value: config.dayRolloverHour, hint: "The hour a new program day begins. 0 = midnight." },
         ]}
