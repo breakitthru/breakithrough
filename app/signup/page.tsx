@@ -45,8 +45,9 @@ export default async function SignupPage() {
         <SignupForm googleEnabled={isGoogleConfigured} />
       </div>
       <p className="mt-6 text-center text-xs text-[var(--color-ink-faint)]">
-        By continuing, you agree to our <span className="underline">Terms</span> and{" "}
-        <span className="underline">Privacy Policy</span>.
+        By continuing, you agree to our{" "}
+        <Link href="/legal/terms" className="underline underline-offset-2 hover:text-[var(--color-ink)]">Terms</Link> and{" "}
+        <Link href="/legal/privacy" className="underline underline-offset-2 hover:text-[var(--color-ink)]">Privacy Policy</Link>.
       </p>
     </SplitCanvas>
   );
