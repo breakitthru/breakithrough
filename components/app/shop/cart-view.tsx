@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Trash, Minus, Plus, ShoppingBag } from "@phosphor-icons/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getCart, setQty, removeFromCart, clearCart, CART_EVENT, type CartEntry } from "@/components/app/shop/cart";
+import { getCart, setQty, removeFromCart, clearCart, lineKey, CART_EVENT, type CartEntry } from "@/components/app/shop/cart";
 import { createShopOrder, verifyShopPayment } from "@/lib/shop-actions";
 
 type RazorpayResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
@@ -52,7 +52,7 @@ export function CartView() {
     setBusy(true);
     setError(null);
     const res = await createShopOrder({
-      items: cart.map((c) => ({ shopItemId: c.id, quantity: c.quantity })),
+      items: cart.map((c) => ({ shopItemId: c.id, size: c.size ?? null, quantity: c.quantity })),
       address: addr,
     });
     if (!res.ok) { setError(res.error); setBusy(false); return; }
@@ -100,8 +100,10 @@ export function CartView() {
 
       {/* Items */}
       <Card className="mt-6 p-0">
-        {cart.map((c) => (
-          <div key={c.id} className="flex items-center gap-4 border-b border-[var(--color-line)] p-4 last:border-0">
+        {cart.map((c) => {
+          const key = lineKey(c);
+          return (
+          <div key={key} className="flex items-center gap-4 border-b border-[var(--color-line)] p-4 last:border-0">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-md)] bg-[var(--color-surface-sunken)]">
               {c.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -111,17 +113,18 @@ export function CartView() {
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-[var(--color-ink)]">{c.title}</p>
+              <p className="truncate font-medium text-[var(--color-ink)]">{c.title}{c.size ? <span className="text-[var(--color-ink-muted)]"> · {c.size}</span> : null}</p>
               <p className="text-sm text-[var(--color-ink-muted)]">₹{c.priceInr}</p>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => setQty(c.id, c.quantity - 1)} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[var(--color-surface-sunken)]"><Minus size={14} /></button>
+              <button onClick={() => setQty(key, c.quantity - 1)} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[var(--color-surface-sunken)]"><Minus size={14} /></button>
               <span className="w-7 text-center text-sm">{c.quantity}</span>
-              <button onClick={() => setQty(c.id, c.quantity + 1)} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[var(--color-surface-sunken)]"><Plus size={14} /></button>
+              <button onClick={() => setQty(key, c.quantity + 1)} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[var(--color-surface-sunken)]"><Plus size={14} /></button>
             </div>
-            <button onClick={() => removeFromCart(c.id)} className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-crisis)] hover:bg-[var(--color-crisis-subtle)]"><Trash size={15} /></button>
+            <button onClick={() => removeFromCart(key)} className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-crisis)] hover:bg-[var(--color-crisis-subtle)]"><Trash size={15} /></button>
           </div>
-        ))}
+          );
+        })}
       </Card>
 
       {/* Address */}

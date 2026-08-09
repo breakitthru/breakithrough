@@ -530,18 +530,21 @@ model Policy {
 // ── Shop: money-purchasable items + orders (points rewards stay in Reward) ──
 
 model ShopItem {
-  id          String      @id @default(cuid())
-  title       String
-  description String?
-  priceInr    Int
-  imageUrl    String?     @db.Text // data URL, optional
-  active      Boolean     @default(true)
-  featured    Boolean     @default(false)
-  stock       Int? // null = unlimited
-  order       Int         @default(0)
-  orderItems  OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  priceInr     Int
+  imageUrl     String?     @db.Text // data URL, optional
+  hasSizes     Boolean     @default(false) // when true, buyers must pick a size
+  sizes        String[]    @default([]) // e.g. ["S", "M", "L", "XL"]
+  sizeChartUrl String?     @db.Text // data URL of a size chart image, optional
+  active       Boolean     @default(true)
+  featured     Boolean     @default(false)
+  stock        Int? // null = unlimited
+  order        Int         @default(0)
+  orderItems   OrderItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 enum OrderStatus {
@@ -582,6 +585,7 @@ model OrderItem {
   shopItem   ShopItem? @relation(fields: [shopItemId], references: [id], onDelete: SetNull)
   title      String // snapshot at purchase time
   priceInr   Int // snapshot
+  size       String? // chosen size, when the item has sizes
   quantity   Int       @default(1)
 
   @@index([orderId])

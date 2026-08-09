@@ -9,7 +9,7 @@ import { RedeemButton } from "@/components/app/redeem-button";
 import { addToCart, getCart, cartCount, CART_EVENT } from "@/components/app/shop/cart";
 
 export type RewardCard = { id: string; title: string; description: string | null; pointsCost: number; featured: boolean };
-export type StoreItem = { id: string; title: string; description: string | null; priceInr: number; imageUrl: string | null; stock: number | null; featured: boolean };
+export type StoreItem = { id: string; title: string; description: string | null; priceInr: number; imageUrl: string | null; stock: number | null; featured: boolean; hasSizes: boolean };
 
 export function ShopTabs({
   balance,
@@ -83,30 +83,38 @@ export function ShopTabs({
             {items.map((item) => {
               const out = item.stock !== null && item.stock <= 0;
               return (
-                <Card key={item.id} className={`flex flex-col overflow-hidden p-0 ${out ? "opacity-60" : ""}`}>
-                  <div className="flex h-40 items-center justify-center bg-[var(--color-surface-sunken)]">
-                    {item.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
-                    ) : (
-                      <ShoppingBag size={36} className="text-[var(--color-ink-faint)]" />
-                    )}
-                  </div>
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="font-semibold text-[var(--color-ink)]">{item.title}</h3>
-                    {item.description && <p className="mt-0.5 text-sm text-[var(--color-ink-muted)]">{item.description}</p>}
-                    <div className="mt-4 flex items-center justify-between">
-                      <span className="font-display text-lg text-[var(--color-ink)]">₹{item.priceInr}</span>
-                      {out ? (
-                        <span className="text-sm text-[var(--color-ink-muted)]">Out of stock</span>
+                <Link key={item.id} href={`/shop/item/${item.id}`} className="group block">
+                  <Card className={`flex h-full flex-col overflow-hidden p-0 transition-colors group-hover:border-[var(--color-line-strong)] ${out ? "opacity-60" : ""}`}>
+                    <div className="flex h-40 items-center justify-center bg-[var(--color-surface-sunken)]">
+                      {item.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                       ) : (
-                        <Button size="sm" variant={added === item.id ? "outline" : "primary"} onClick={() => add(item)}>
-                          {added === item.id ? (<><Check size={16} /> Added</>) : (<><Plus size={16} /> Add to cart</>)}
-                        </Button>
+                        <ShoppingBag size={36} className="text-[var(--color-ink-faint)]" />
                       )}
                     </div>
-                  </div>
-                </Card>
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="font-semibold text-[var(--color-ink)]">{item.title}</h3>
+                      {item.description && <p className="mt-0.5 line-clamp-2 text-sm text-[var(--color-ink-muted)]">{item.description}</p>}
+                      <div className="mt-4 flex items-center justify-between">
+                        <span className="font-display text-lg text-[var(--color-ink)]">₹{item.priceInr}</span>
+                        {out ? (
+                          <span className="text-sm text-[var(--color-ink-muted)]">Out of stock</span>
+                        ) : item.hasSizes ? (
+                          <Button size="sm" variant="primary">Select options</Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant={added === item.id ? "outline" : "primary"}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); add(item); }}
+                          >
+                            {added === item.id ? (<><Check size={16} /> Added</>) : (<><Plus size={16} /> Add to cart</>)}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
               );
             })}
           </div>

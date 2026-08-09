@@ -14,7 +14,7 @@ export async function notifyOrderPlaced(orderId: string): Promise<void> {
   });
   if (!order) return;
 
-  const lines = order.items.map((i) => `  - ${i.title} x${i.quantity} (₹${i.priceInr} each)`).join("\n");
+  const lines = order.items.map((i) => `  - ${i.title}${i.size ? ` [size ${i.size}]` : ""} x${i.quantity} (₹${i.priceInr} each)`).join("\n");
   const text = [
     `New order from ${order.shipName} (${order.user?.email ?? "no email"}).`,
     "",

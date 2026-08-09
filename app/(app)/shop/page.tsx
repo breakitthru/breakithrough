@@ -17,7 +17,7 @@ export default async function ShopPage() {
       balance={user.pointsBalance}
       rewards={rewards.map((r) => ({ id: r.id, title: r.title, description: r.description, pointsCost: r.pointsCost, featured: r.featured }))}
       redeemedIds={redemptions.map((r) => r.rewardId)}
-      items={items.map((i) => ({ id: i.id, title: i.title, description: i.description, priceInr: i.priceInr, imageUrl: i.imageUrl, stock: i.stock, featured: i.featured }))}
+      items={items.map((i) => ({ id: i.id, title: i.title, description: i.description, priceInr: i.priceInr, imageUrl: i.imageUrl, stock: i.stock, featured: i.featured, hasSizes: i.hasSizes }))}
     />
   );
 }

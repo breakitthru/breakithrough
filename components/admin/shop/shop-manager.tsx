@@ -16,6 +16,9 @@ export type ShopItemRow = {
   description: string | null;
   priceInr: number;
   imageUrl: string | null;
+  hasSizes: boolean;
+  sizes: string[];
+  sizeChartUrl: string | null;
   stock: number | null;
   active: boolean;
   featured: boolean;
@@ -23,12 +26,13 @@ export type ShopItemRow = {
 };
 
 const MAX_BYTES = 500 * 1024;
-const empty = { title: "", description: "", priceInr: 0, imageUrl: "", stock: "", active: true, featured: false, order: 0 };
+const empty = { title: "", description: "", priceInr: 0, imageUrl: "", hasSizes: false, sizesText: "", sizeChartUrl: "", stock: "", active: true, featured: false, order: 0 };
 type Form = typeof empty;
 
 export function ShopManager({ items }: { items: ShopItemRow[] }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const chartRef = useRef<HTMLInputElement>(null);
   const [pending, start] = useTransition();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -43,6 +47,9 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
       description: it.description ?? "",
       priceInr: it.priceInr,
       imageUrl: it.imageUrl ?? "",
+      hasSizes: it.hasSizes,
+      sizesText: it.sizes.join(", "),
+      sizeChartUrl: it.sizeChartUrl ?? "",
       stock: it.stock === null ? "" : String(it.stock),
       active: it.active,
       featured: it.featured,
@@ -52,14 +59,14 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
     setOpen(true);
   };
 
-  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const readImage = (e: React.ChangeEvent<HTMLInputElement>, key: "imageUrl" | "sizeChartUrl") => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) { setError("Please choose an image file."); return; }
     if (file.size > MAX_BYTES) { setError("That image is over 500 KB. Please choose a smaller one."); return; }
     const reader = new FileReader();
-    reader.onload = () => setForm((f) => ({ ...f, imageUrl: reader.result as string }));
+    reader.onload = () => setForm((f) => ({ ...f, [key]: reader.result as string }));
     reader.readAsDataURL(file);
   };
 
@@ -71,6 +78,9 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
         description: form.description,
         priceInr: form.priceInr,
         imageUrl: form.imageUrl || null,
+        hasSizes: form.hasSizes,
+        sizes: form.sizesText.split(",").map((s) => s.trim()).filter(Boolean),
+        sizeChartUrl: form.sizeChartUrl || null,
         stock: form.stock === "" ? null : Number(form.stock),
         active: form.active,
         featured: form.featured,
@@ -149,7 +159,8 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
           </div>
         }
       >
-        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => readImage(e, "imageUrl")} />
+        <input ref={chartRef} type="file" accept="image/*" className="hidden" onChange={(e) => readImage(e, "sizeChartUrl")} />
         <Field label="Title">
           <input className={inputClass} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
         </Field>
@@ -177,6 +188,32 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
         <Field label="Display order" hint="Lower shows first.">
           <input type="number" min={0} className={inputClass} value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} />
         </Field>
+
+        {/* Sizes (the "size" checkmark) — the size fields only appear when this is on */}
+        <div className="flex items-center justify-between py-1">
+          <span className="text-sm text-[var(--color-ink)]">This item has sizes</span>
+          <Toggle checked={form.hasSizes} onChange={(v) => setForm({ ...form, hasSizes: v })} />
+        </div>
+        {form.hasSizes && (
+          <div className="rounded-[var(--radius-md)] border border-[var(--color-line)] p-3">
+            <Field label="Sizes" hint="Comma separated, e.g. S, M, L, XL. Buyers must pick one.">
+              <input className={inputClass} placeholder="S, M, L, XL" value={form.sizesText} onChange={(e) => setForm({ ...form, sizesText: e.target.value })} />
+            </Field>
+            <Field label="Size chart image" hint="Optional. Shown to buyers on the item page. Up to 500 KB.">
+              <div className="flex flex-col gap-2">
+                {form.sizeChartUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={form.sizeChartUrl} alt="Size chart preview" className="max-h-40 w-full rounded-[var(--radius-md)] object-contain" />
+                )}
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => chartRef.current?.click()}><UploadSimple size={16} /> {form.sizeChartUrl ? "Replace chart" : "Upload chart"}</Button>
+                  {form.sizeChartUrl && <Button size="sm" variant="outline" onClick={() => setForm({ ...form, sizeChartUrl: "" })}>Remove</Button>}
+                </div>
+              </div>
+            </Field>
+          </div>
+        )}
+
         <div className="flex items-center justify-between py-1">
           <span className="text-sm text-[var(--color-ink)]">Live in the shop</span>
           <Toggle checked={form.active} onChange={(v) => setForm({ ...form, active: v })} />

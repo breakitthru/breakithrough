@@ -15,6 +15,9 @@ const itemSchema = z.object({
   description: z.string().trim().max(600).optional().nullable(),
   priceInr: z.coerce.number().int().min(0).max(1_000_000),
   imageUrl: z.string().optional().nullable(),
+  hasSizes: z.coerce.boolean(),
+  sizes: z.array(z.string().trim().min(1).max(40)).max(30).optional().default([]),
+  sizeChartUrl: z.string().optional().nullable(),
   stock: z.union([z.coerce.number().int().min(0).max(1_000_000), z.null()]).optional(),
   active: z.coerce.boolean(),
   featured: z.coerce.boolean(),
@@ -26,6 +29,9 @@ export type ShopItemInput = {
   description?: string | null;
   priceInr: number | string;
   imageUrl?: string | null;
+  hasSizes: boolean;
+  sizes?: string[];
+  sizeChartUrl?: string | null;
   stock?: number | string | null;
   active: boolean;
   featured: boolean;
@@ -39,25 +45,38 @@ function validateImage(url: string | null | undefined): string | null | "invalid
   return url;
 }
 
+type ItemData = z.infer<typeof itemSchema>;
+function buildData(d: ItemData): { ok: true; data: Record<string, unknown> } | { ok: false; error: string } {
+  const img = validateImage(d.imageUrl);
+  if (img === "invalid") return { ok: false, error: "That image isn't supported or is too large (max ~600 KB)." };
+  const chart = validateImage(d.sizeChartUrl);
+  if (chart === "invalid") return { ok: false, error: "That size chart image isn't supported or is too large (max ~600 KB)." };
+  return {
+    ok: true,
+    data: {
+      title: d.title,
+      description: d.description || null,
+      priceInr: d.priceInr,
+      imageUrl: img,
+      hasSizes: d.hasSizes,
+      sizes: d.hasSizes ? (d.sizes ?? []) : [],
+      sizeChartUrl: d.hasSizes ? chart : null,
+      stock: d.stock === undefined ? null : d.stock,
+      active: d.active,
+      featured: d.featured,
+      order: d.order,
+    },
+  };
+}
+
 export async function createShopItem(input: ShopItemInput): Promise<Result> {
   const admin = await requirePermission("shop.manage");
   const parsed = itemSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid item" };
-  const img = validateImage(parsed.data.imageUrl);
-  if (img === "invalid") return { ok: false, error: "That image isn't supported or is too large (max ~600 KB)." };
+  const built = buildData(parsed.data);
+  if (!built.ok) return built;
 
-  const item = await prisma.shopItem.create({
-    data: {
-      title: parsed.data.title,
-      description: parsed.data.description || null,
-      priceInr: parsed.data.priceInr,
-      imageUrl: img,
-      stock: parsed.data.stock === undefined ? null : parsed.data.stock,
-      active: parsed.data.active,
-      featured: parsed.data.featured,
-      order: parsed.data.order,
-    },
-  });
+  const item = await prisma.shopItem.create({ data: built.data as never });
   await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "shop.item.create", targetType: "ShopItem", targetId: item.id, summary: `Added shop item "${parsed.data.title}"` });
   revalidatePath("/admin/shop");
   revalidatePath("/shop");
@@ -68,22 +87,10 @@ export async function updateShopItem(id: string, input: ShopItemInput): Promise<
   const admin = await requirePermission("shop.manage");
   const parsed = itemSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid item" };
-  const img = validateImage(parsed.data.imageUrl);
-  if (img === "invalid") return { ok: false, error: "That image isn't supported or is too large (max ~600 KB)." };
+  const built = buildData(parsed.data);
+  if (!built.ok) return built;
 
-  await prisma.shopItem.update({
-    where: { id },
-    data: {
-      title: parsed.data.title,
-      description: parsed.data.description || null,
-      priceInr: parsed.data.priceInr,
-      imageUrl: img,
-      stock: parsed.data.stock === undefined ? null : parsed.data.stock,
-      active: parsed.data.active,
-      featured: parsed.data.featured,
-      order: parsed.data.order,
-    },
-  });
+  await prisma.shopItem.update({ where: { id }, data: built.data as never });
   await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "shop.item.update", targetType: "ShopItem", targetId: id, summary: `Edited shop item "${parsed.data.title}"` });
   revalidatePath("/admin/shop");
   revalidatePath("/shop");

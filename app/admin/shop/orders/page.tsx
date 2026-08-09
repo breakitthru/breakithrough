@@ -58,7 +58,7 @@ export default async function AdminOrdersPage() {
                   <p className="eyebrow mb-1">Items</p>
                   <ul className="text-sm text-[var(--color-ink-muted)]">
                     {o.items.map((i) => (
-                      <li key={i.id}>{i.title} × {i.quantity} · ₹{i.priceInr}</li>
+                      <li key={i.id}>{i.title}{i.size ? ` (${i.size})` : ""} × {i.quantity} · ₹{i.priceInr}</li>
                     ))}
                   </ul>
                 </div>

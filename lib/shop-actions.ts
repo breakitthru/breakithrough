@@ -22,10 +22,12 @@ const addressSchema = z.object({
   state: z.string().trim().min(1, "State is required").max(80),
   pincode: z.string().trim().min(4, "PIN code is required").max(12),
 });
-const itemsSchema = z.array(z.object({ shopItemId: z.string().min(1), quantity: z.coerce.number().int().min(1).max(20) })).min(1, "Your cart is empty");
+const itemsSchema = z
+  .array(z.object({ shopItemId: z.string().min(1), size: z.string().trim().max(40).optional().nullable(), quantity: z.coerce.number().int().min(1).max(20) }))
+  .min(1, "Your cart is empty");
 
 export type ShopAddress = z.input<typeof addressSchema>;
-export type CartLine = { shopItemId: string; quantity: number };
+export type CartLine = { shopItemId: string; size?: string | null; quantity: number };
 
 type OrderResult =
   | { ok: true; orderId: string; amountPaise: number; keyId: string; email: string; prefillName: string }
@@ -43,12 +45,17 @@ export async function createShopOrder(input: { items: CartLine[]; address: ShopA
   const ids = items.data.map((i) => i.shopItemId);
   const products = await prisma.shopItem.findMany({ where: { id: { in: ids }, active: true } });
   const byId = new Map(products.map((p) => [p.id, p]));
-  const lines: { shopItemId: string; title: string; priceInr: number; quantity: number }[] = [];
+  const lines: { shopItemId: string; title: string; priceInr: number; size: string | null; quantity: number }[] = [];
   for (const line of items.data) {
     const p = byId.get(line.shopItemId);
     if (!p) return { ok: false, error: "One of the items is no longer available." };
     if (p.stock !== null && p.stock < line.quantity) return { ok: false, error: `"${p.title}" is out of stock.` };
-    lines.push({ shopItemId: p.id, title: p.title, priceInr: p.priceInr, quantity: line.quantity });
+    let size: string | null = null;
+    if (p.hasSizes) {
+      if (!line.size || !p.sizes.includes(line.size)) return { ok: false, error: `Please choose a valid size for "${p.title}".` };
+      size = line.size;
+    }
+    lines.push({ shopItemId: p.id, title: p.title, priceInr: p.priceInr, size, quantity: line.quantity });
   }
   const totalInr = lines.reduce((sum, l) => sum + l.priceInr * l.quantity, 0);
   if (totalInr <= 0) return { ok: false, error: "Nothing to pay for." };
