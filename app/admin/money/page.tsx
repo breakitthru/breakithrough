@@ -56,7 +56,7 @@ export default async function PurchasesPage() {
                   <td className="px-3 py-3 text-right">
                     {canAct && p.status === "PAID" && (
                       <ConfirmButton
-                        action={() => refundPayment(p.id)}
+                        action={refundPayment.bind(null, p.id)}
                         confirmTitle="Refund this payment?"
                         confirmBody="This records a refund. The gateway refund is not automated yet — process it there too."
                         confirmCta="Mark refunded"

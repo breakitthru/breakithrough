@@ -23,7 +23,7 @@ export default async function NotificationsSettingsPage() {
       <SettingsTabs />
       <JsonEditor
         initial={JSON.stringify(prefs, null, 2)}
-        action={(value) => setSettingsConfig("notificationPrefs", value)}
+        action={setSettingsConfig.bind(null, "notificationPrefs")}
         hint="Per-event email / in-app routing. Delivery wiring lands with the mail provider."
       />
     </>

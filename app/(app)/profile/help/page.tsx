@@ -41,7 +41,7 @@ export default function HelpPage() {
       <p className="eyebrow mt-8">Still stuck?</p>
       <Card className="mt-3 flex flex-col gap-3 p-6 sm:flex-row">
         <a
-          href="mailto:support@breakitthrough.app"
+          href="mailto:breakitthru@gmail.com"
           className="flex flex-1 items-center gap-3 rounded-[var(--radius-md)] bg-[var(--color-surface-sunken)] px-4 py-3 transition-colors hover:bg-[var(--color-brand-subtle)]"
         >
           <EnvelopeSimple size={20} className="text-[var(--color-ink-muted)]" />

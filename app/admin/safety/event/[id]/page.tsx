@@ -55,7 +55,7 @@ export default async function SosEventPage({ params }: { params: Promise<{ id: s
               <p className="mt-4 text-sm text-[var(--color-success)]">Reviewed.</p>
             ) : canAct ? (
               <ConfirmButton
-                action={() => markSosReviewed(event.id)}
+                action={markSosReviewed.bind(null, event.id)}
                 className="mt-4 w-full rounded-[var(--radius-pill)] bg-[var(--color-brand)] px-4 py-2.5 text-sm font-medium text-[var(--color-brand-fg)] hover:bg-[var(--color-brand-hover)]"
               >
                 Mark reviewed

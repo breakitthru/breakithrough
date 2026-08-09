@@ -21,8 +21,10 @@ export type LegalDoc = {
 const OPERATOR = "Break It Thru";
 const OPERATOR_NAME = "Yash Goyal";
 const LOCATION = "Gurgaon, Haryana, India";
-const SUPPORT = "support@breakitthrough.app";
-const GRIEVANCE = "privacy@breakitthrough.app";
+// Interim address until the breakitthru.com mailbox is live (then switch to
+// support@breakitthru.com / privacy@breakitthru.com).
+const SUPPORT = "breakitthru@gmail.com";
+const GRIEVANCE = "breakitthru@gmail.com";
 
 export const LEGAL_DOCS: Record<string, LegalDoc> = {
   terms: {

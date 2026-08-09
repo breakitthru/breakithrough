@@ -55,10 +55,10 @@ export default async function RewardsPage() {
                     <td className="px-3 py-3">
                       {canAct && (
                         <div className="flex items-center justify-end gap-2">
-                          <ConfirmButton action={() => setRedemptionStatus(r.id, "FULFILLED")} className="rounded-[var(--radius-pill)] bg-[var(--color-brand)] px-3 py-1.5 text-xs font-medium text-[var(--color-brand-fg)] hover:bg-[var(--color-brand-hover)]">
+                          <ConfirmButton action={setRedemptionStatus.bind(null, r.id, "FULFILLED")} className="rounded-[var(--radius-pill)] bg-[var(--color-brand)] px-3 py-1.5 text-xs font-medium text-[var(--color-brand-fg)] hover:bg-[var(--color-brand-hover)]">
                             Mark posted
                           </ConfirmButton>
-                          <ConfirmButton action={() => setRedemptionStatus(r.id, "CANCELLED")} confirmTitle="Cancel this redemption?" confirmCta="Cancel it" className="rounded-[var(--radius-pill)] border border-[var(--color-line-strong)] px-3 py-1.5 text-xs text-[var(--color-ink)] hover:bg-[var(--color-surface-sunken)]">
+                          <ConfirmButton action={setRedemptionStatus.bind(null, r.id, "CANCELLED")} confirmTitle="Cancel this redemption?" confirmCta="Cancel it" className="rounded-[var(--radius-pill)] border border-[var(--color-line-strong)] px-3 py-1.5 text-xs text-[var(--color-ink)] hover:bg-[var(--color-surface-sunken)]">
                             Cancel
                           </ConfirmButton>
                         </div>
