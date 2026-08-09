@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { getConfig } from "@/lib/config";
+import { BrandLogo } from "@/components/brand-logo";
 
 /*
   Shared split-canvas used across auth + onboarding (login, intake, consent,
   trusted contact, etc.): a dark evergreen brand panel on the left and a work
   area on the right. Matches D02–D14.
 */
-export function SplitCanvas({
+export async function SplitCanvas({
   leftTitle,
   leftBody,
   bullets,
@@ -21,13 +23,21 @@ export function SplitCanvas({
   backHref?: string;
   children: React.ReactNode;
 }) {
+  const config = await getConfig();
   return (
     <div className="grid min-h-dvh grid-cols-1 lg:grid-cols-2">
       {/* Left brand panel */}
       <div className="relative hidden flex-col justify-between overflow-hidden bg-[var(--color-brand-ink)] p-14 text-[var(--color-brand-fg)] lg:flex">
-        <div className="flex h-12 w-28 items-center justify-center rounded-[var(--radius-md)] border border-dashed border-white/25 text-sm text-white/50">
-          Logo
-        </div>
+        <BrandLogo
+          logoUrl={config.logoUrl}
+          logoSize={config.logoSize}
+          alt="Logo"
+          fallback={
+            <div className="flex h-12 w-28 items-center justify-center rounded-[var(--radius-md)] border border-dashed border-white/25 text-sm text-white/50">
+              Logo
+            </div>
+          }
+        />
         <div className="relative z-10">
           <h1 className="font-display text-[2.75rem] leading-[1.08]">{leftTitle}</h1>
           {leftBody && <p className="mt-5 max-w-sm text-white/70">{leftBody}</p>}

@@ -18,6 +18,30 @@ export async function setSettingsConfig(key: string, value: unknown): Promise<Re
   return { ok: true };
 }
 
+const LOGO_DATA_URL = /^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$/;
+
+/**
+ * Save (or clear) the brand logo + its size. The logo is stored as a data URL in
+ * SiteConfig so no external image host is needed. Pass dataUrl=null to remove it
+ * and fall back to the placeholder box everywhere.
+ */
+export async function setBrandLogo(dataUrl: string | null, size: number): Promise<Result> {
+  const admin = await requirePermission("settings.edit");
+  const clampedSize = Math.max(16, Math.min(120, Math.round(Number(size) || 40)));
+  if (dataUrl) {
+    if (!LOGO_DATA_URL.test(dataUrl)) return { ok: false, error: "That doesn't look like a supported image (PNG, JPG, WEBP, GIF or SVG)." };
+    if (dataUrl.length > 900_000) return { ok: false, error: "That image is too large. Please keep it under about 600 KB." };
+  }
+  await prisma.$transaction([
+    prisma.siteConfig.upsert({ where: { key: "logoUrl" }, update: { value: (dataUrl ?? "") as never }, create: { key: "logoUrl", value: (dataUrl ?? "") as never } }),
+    prisma.siteConfig.upsert({ where: { key: "logoSize" }, update: { value: clampedSize as never }, create: { key: "logoSize", value: clampedSize as never } }),
+  ]);
+  await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "brand.logo", targetType: "SiteConfig", targetId: "logoUrl", summary: dataUrl ? `Updated the brand logo (height ${clampedSize}px)` : "Removed the brand logo" });
+  // The logo appears in every shell, so refresh everything under the root layout.
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 const policySchema = z.object({
   key: z.string().trim().min(1).max(60).regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers and dashes"),
   title: z.string().trim().min(1).max(120),

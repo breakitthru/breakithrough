@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/app/sidebar";
 import { DaylightDock } from "@/components/app/daylight-dock";
 import { requireOnboardedUser } from "@/lib/session";
 import { hasAdminAccess } from "@/lib/admin";
+import { getConfig } from "@/lib/config";
 
 /*
   Authenticated member-app shell (desktop). Requires a signed-in, onboarded user;
@@ -11,6 +12,7 @@ import { hasAdminAccess } from "@/lib/admin";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireOnboardedUser();
   const name = user.displayName ?? user.name ?? "there";
+  const config = await getConfig();
 
   return (
     <div className="min-h-dvh bg-[var(--color-canvas)]">
@@ -21,6 +23,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           avatarInitial: name.charAt(0).toUpperCase(),
           trustedName: user.trustedName,
         }}
+        logoUrl={config.logoUrl}
+        logoSize={config.logoSize}
       />
       <main className="ml-[264px] min-h-dvh">
         <div className="mx-auto w-full max-w-[1180px] px-10 py-10">{children}</div>

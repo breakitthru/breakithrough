@@ -14,6 +14,8 @@ export const CONFIG_DEFAULTS = {
   sosRideOutPoints: 1, // max 1/day
   reflectionPoints: 1, // max 1/day
   reflectionPrompt: "What's one thing you noticed today?", // daily journaling prompt shown to members
+  logoUrl: "" as string, // admin-uploaded brand logo (data URL); empty = show the placeholder box
+  logoSize: 40 as number, // rendered logo height in px
   rupeePerPoint: null as number | null, // UNSET by design — blocks reward pricing until the client decides
   dayRolloverHour: 0, // midnight; day boundary in IST
   timezone: "Asia/Kolkata",
