@@ -5,17 +5,30 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAudit } from "@/lib/audit";
+import { refundRazorpayPayment, isRazorpayConfigured } from "@/lib/razorpay";
 
 type Result = { ok: true } | { ok: false; error: string };
 
-/** Refund a payment. STUB: flips status to REFUNDED; real Razorpay refund is not wired. */
+/** Refund a payment through Razorpay, then flip our record to REFUNDED. */
 export async function refundPayment(id: string): Promise<Result> {
   const admin = await requirePermission("money.act");
   const p = await prisma.payment.findUnique({ where: { id } });
   if (!p) return { ok: false, error: "Payment not found" };
   if (p.status !== "PAID") return { ok: false, error: "Only paid payments can be refunded" };
+
+  // Real payments carry a Razorpay id; issue the refund there first so we never
+  // mark a record refunded that wasn't actually returned to the member.
+  if (p.razorpayPaymentId) {
+    if (!isRazorpayConfigured) return { ok: false, error: "Razorpay isn't configured, so this can't be refunded automatically." };
+    try {
+      await refundRazorpayPayment(p.razorpayPaymentId, p.amountInr * 100);
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : "Refund failed at Razorpay" };
+    }
+  }
+
   await prisma.payment.update({ where: { id }, data: { status: "REFUNDED" } });
-  await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "payment.refund", targetType: "Payment", targetId: id, summary: `Refunded ₹${p.amountInr} (stub)` });
+  await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "payment.refund", targetType: "Payment", targetId: id, summary: `Refunded ₹${p.amountInr}` });
   revalidatePath("/admin/money");
   revalidatePath(`/admin/members/${p.userId}`);
   return { ok: true };

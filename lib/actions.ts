@@ -231,22 +231,5 @@ export async function redeemReward(rewardId: string) {
  * Placeholder payment. Marks the account paid so the paywall flow is testable
  * end to end. MUST be replaced by verified Razorpay payment before launch.
  */
-export async function completePaymentStub() {
-  const user = await requireUser();
-  if (user.plan !== "ACTIVE" && user.plan !== "COMPLETED") {
-    const config = await getConfigInline();
-    await prisma.$transaction([
-      prisma.user.update({ where: { id: user.id }, data: { plan: "ACTIVE", paidAt: new Date() } }),
-      prisma.payment.create({
-        data: { userId: user.id, amountInr: config.programPriceInr, status: "PAID" },
-      }),
-    ]);
-  }
-  revalidatePath("/today");
-  redirect("/checkout/confirmed");
-}
-
-async function getConfigInline() {
-  const { getConfig } = await import("@/lib/config");
-  return getConfig();
-}
+// Real Razorpay checkout lives in lib/payment-actions.ts (createPaymentOrder /
+// verifyPayment) with the webhook at app/api/razorpay/webhook.
