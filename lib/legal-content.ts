@@ -18,8 +18,9 @@ export type LegalDoc = {
   sections: LegalSection[];
 };
 
-const OPERATOR = "Break It Through";
-const LOCATION = "Bengaluru, Karnataka, India";
+const OPERATOR = "Break It Thru";
+const OPERATOR_NAME = "Yash Goyal";
+const LOCATION = "Gurgaon, Haryana, India";
 const SUPPORT = "support@breakitthrough.app";
 const GRIEVANCE = "privacy@breakitthrough.app";
 
@@ -32,9 +33,9 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
     intro: `These terms govern your use of ${OPERATOR} (the "Service"), a self-guided 60-day programme for getting through a breakup. By creating an account or using the Service, you agree to these terms.`,
     sections: [
       {
-        heading: "1. What Break It Through is — and is not",
+        heading: "1. What Break It Thru is — and is not",
         body: [
-          "Break It Through is a structured, clinician-authored self-help programme. It offers daily tasks, reflections, and educational content designed to support emotional recovery after a relationship ends.",
+          "Break It Thru is a structured, clinician-authored self-help programme. It offers daily tasks, reflections, and educational content designed to support emotional recovery after a relationship ends.",
           "It is not therapy, counselling, medical care, or a crisis service, and it does not create a doctor-patient or therapist-client relationship. It is not a substitute for professional help. If you are struggling with your mental health, please consult a qualified professional.",
         ],
       },
@@ -96,12 +97,12 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
       {
         heading: "11. Changes and governing law",
         body: [
-          "We may update these terms; material changes will be notified in the app. These terms are governed by the laws of India, and the courts of Karnataka have exclusive jurisdiction.",
+          "We may update these terms; material changes will be notified in the app. These terms are governed by the laws of India, and the courts of Haryana have exclusive jurisdiction.",
         ],
       },
       {
         heading: "12. Contact",
-        body: [`Questions about these terms? Write to ${SUPPORT}. Operated from ${LOCATION}.`],
+        body: [`Questions about these terms? Write to ${SUPPORT}. Operated by ${OPERATOR_NAME} from ${LOCATION}.`],
       },
     ],
   },
@@ -115,7 +116,7 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
     sections: [
       {
         heading: "1. Who we are",
-        body: [`${OPERATOR}, operated from ${LOCATION}, is the data fiduciary responsible for your personal data under this policy.`],
+        body: [`${OPERATOR}, operated by ${OPERATOR_NAME} from ${LOCATION}, is the data fiduciary responsible for your personal data under this policy.`],
       },
       {
         heading: "2. What we collect",

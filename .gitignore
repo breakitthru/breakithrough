@@ -24,6 +24,10 @@ yarn-error.log*
 .env
 .env*.local
 
+# credentials handoff (secrets — never commit)
+CREDENTIALS.txt
+credentials.txt
+
 # typescript
 *.tsbuildinfo
 

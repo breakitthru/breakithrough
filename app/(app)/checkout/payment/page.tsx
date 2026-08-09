@@ -32,7 +32,7 @@ export default async function CheckoutPage() {
       <Card className="mt-6 flex items-center justify-between p-6">
         <div>
           <p className="font-semibold text-[var(--color-ink)]">
-            Break It Through · {config.programDays} days
+            Break It Thru · {config.programDays} days
           </p>
           <p className="text-sm text-[var(--color-ink-muted)]">
             One payment · all {config.programDays} days · no renewal

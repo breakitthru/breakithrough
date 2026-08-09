@@ -71,7 +71,7 @@ export function AdminSidebar({
           LOGO
         </div>
         <div className="leading-tight">
-          <p className="text-sm font-semibold">Break It Through</p>
+          <p className="text-sm font-semibold">Break It Thru</p>
           <p className="text-[0.6rem] uppercase tracking-[0.16em] text-white/45">Admin</p>
         </div>
       </div>

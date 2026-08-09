@@ -23,7 +23,7 @@ export default async function WorkspaceSettingsPage() {
       <ConfigEditor
         action={setSettingsConfig}
         fields={[
-          { key: "workspaceName", label: "Workspace name", value: extra.workspaceName ?? "Break It Through", kind: "text" },
+          { key: "workspaceName", label: "Workspace name", value: extra.workspaceName ?? "Break It Thru", kind: "text" },
           { key: "supportEmail", label: "Support email", value: extra.supportEmail ?? "", kind: "text" },
           { key: "timezone", label: "Timezone", value: config.timezone, kind: "text" },
           { key: "currency", label: "Currency", value: config.currency, kind: "text" },

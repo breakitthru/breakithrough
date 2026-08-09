@@ -4,7 +4,7 @@ import { ArrowLeft, Envelope, Lifebuoy, Question } from "@phosphor-icons/react/d
 import { prisma } from "@/lib/prisma";
 import { SUPPORT_EMAIL } from "@/lib/legal-content";
 
-export const metadata: Metadata = { title: "Support · Break It Through" };
+export const metadata: Metadata = { title: "Support · Break It Thru" };
 
 async function supportEmail() {
   try {
@@ -23,7 +23,7 @@ const FAQ = [
   },
   {
     q: "Is this therapy?",
-    a: "No. Break It Through is a clinician-authored self-help programme, not therapy or medical care. If you need professional support, please reach out to a qualified professional.",
+    a: "No. Break It Thru is a clinician-authored self-help programme, not therapy or medical care. If you need professional support, please reach out to a qualified professional.",
   },
   {
     q: "Are my reflections private?",

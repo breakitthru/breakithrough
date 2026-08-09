@@ -21,7 +21,7 @@ export function AcceptInvite({ token, role, email }: { token: string; role: stri
   return (
     <div>
       <p className="text-sm text-[var(--color-ink-muted)]">
-        You&rsquo;ve been invited to join Break It Through as <span className="font-medium text-[var(--color-ink)]">{role[0] + role.slice(1).toLowerCase()}</span> ({email}).
+        You&rsquo;ve been invited to join Break It Thru as <span className="font-medium text-[var(--color-ink)]">{role[0] + role.slice(1).toLowerCase()}</span> ({email}).
         Accept to get access.
       </p>
       {error && <p className="mt-3 text-sm text-[var(--color-crisis)]">{error}</p>}

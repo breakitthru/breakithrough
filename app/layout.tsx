@@ -17,7 +17,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Break It Through",
+  title: "Break It Thru",
   description:
     "A gentle, clinician-authored 60-day program for getting through a breakup — one day at a time.",
 };

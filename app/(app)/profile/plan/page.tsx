@@ -34,7 +34,7 @@ export default async function PlanPage() {
               <CheckCircle size={22} weight="fill" className="text-[var(--color-success)]" />
               <div>
                 <p className="font-semibold text-[var(--color-ink)]">
-                  Break It Through · {config.programDays} days
+                  Break It Thru · {config.programDays} days
                 </p>
                 <p className="text-sm text-[var(--color-ink-muted)]">
                   Paid · Day {today} of {config.programDays} · no renewal

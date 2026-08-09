@@ -51,7 +51,7 @@ export function SiteFooter() {
             <CookiePreferencesLink className={LINK} />
           </nav>
           <p className="text-white/40">
-            © {year} Break It Through · Bengaluru, Karnataka, India
+            © {year} Break It Thru, operated by Yash Goyal, Gurgaon, Haryana, India
           </p>
         </div>
       </div>

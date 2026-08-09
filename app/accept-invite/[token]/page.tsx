@@ -14,7 +14,7 @@ export default async function AcceptInvitePage({ params }: { params: Promise<{ t
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-[460px] flex-col justify-center px-6 py-10">
-      <p className="eyebrow">Break It Through · Staff</p>
+      <p className="eyebrow">Break It Thru · Staff</p>
       <h1 className="font-display mt-1 text-[2.25rem] leading-tight text-[var(--color-ink)]">Join the team.</h1>
       <Card className="mt-6 p-6">
         {!valid ? (
