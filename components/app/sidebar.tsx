@@ -11,22 +11,29 @@ import {
   Phone,
   CaretRight,
   SquaresFour,
+  ShoppingBag,
 } from "@phosphor-icons/react";
 import { NAV_ITEMS } from "./nav-items";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 
 const ICONS = {
   today: House,
   journey: Path,
   reflections: Notebook,
+  shop: ShoppingBag,
 } as const;
 
 export function Sidebar({
   user,
   isAdmin = false,
+  logoUrl,
+  logoSize,
 }: {
   user: { displayName: string; avatarInitial: string; trustedName?: string | null };
   isAdmin?: boolean;
+  logoUrl?: string;
+  logoSize?: number;
 }) {
   const pathname = usePathname();
   // Highlight the tapped item immediately, before the new page finishes loading.
@@ -36,9 +43,18 @@ export function Sidebar({
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-[264px] flex-col bg-[var(--color-brand-ink)] px-4 py-6 text-[var(--color-brand-fg)]">
-      {/* Logo placeholder */}
-      <div className="mx-1 mb-8 flex h-14 items-center justify-center rounded-[var(--radius-md)] border border-dashed border-white/25 text-sm text-white/50">
-        Logo
+      {/* Logo */}
+      <div className="mx-1 mb-8 flex items-center">
+        <BrandLogo
+          logoUrl={logoUrl}
+          logoSize={logoSize}
+          alt="Logo"
+          fallback={
+            <div className="flex h-14 w-full items-center justify-center rounded-[var(--radius-md)] border border-dashed border-white/25 text-sm text-white/50">
+              Logo
+            </div>
+          }
+        />
       </div>
 
       {/* Primary nav */}

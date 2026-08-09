@@ -16,12 +16,15 @@ import {
   IdentificationBadge,
   ClipboardText,
   Gear,
+  ShoppingBag,
+  Package,
   type Icon,
 } from "@phosphor-icons/react";
 import { ADMIN_NAV } from "./nav";
 import { roleCan } from "@/lib/permissions";
 import type { StaffRole } from "@prisma/client";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 
 const ICONS: Record<string, Icon> = {
   overview: SquaresFour,
@@ -33,6 +36,8 @@ const ICONS: Record<string, Icon> = {
   community: ChatCircleDots,
   sessions: VideoCamera,
   money: CurrencyInr,
+  shop: ShoppingBag,
+  orders: Package,
   staff: IdentificationBadge,
   audit: ClipboardText,
   settings: Gear,
@@ -50,10 +55,14 @@ export function AdminSidebar({
   role,
   displayName,
   avatarInitial,
+  logoUrl,
+  logoSize,
 }: {
   role: StaffRole;
   displayName: string;
   avatarInitial: string;
+  logoUrl?: string;
+  logoSize?: number;
 }) {
   const pathname = usePathname();
   const [pending, setPending] = useState<string | null>(null);
@@ -67,9 +76,16 @@ export function AdminSidebar({
     <aside className="fixed inset-y-0 left-0 z-30 flex w-[248px] flex-col bg-[var(--color-brand-ink)] px-4 py-5 text-[var(--color-brand-fg)]">
       {/* Brand */}
       <div className="mx-1 mb-6 flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] border border-dashed border-white/25 text-[0.6rem] text-white/50">
-          LOGO
-        </div>
+        <BrandLogo
+          logoUrl={logoUrl}
+          logoSize={logoSize}
+          alt="Logo"
+          fallback={
+            <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] border border-dashed border-white/25 text-[0.6rem] text-white/50">
+              LOGO
+            </div>
+          }
+        />
         <div className="leading-tight">
           <p className="text-sm font-semibold">Break It Thru</p>
           <p className="text-[0.6rem] uppercase tracking-[0.16em] text-white/45">Admin</p>

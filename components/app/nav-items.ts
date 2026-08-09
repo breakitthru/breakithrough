@@ -5,11 +5,12 @@ export type NavItem = {
   key: string;
   label: string;
   href: string;
-  icon: "today" | "journey" | "reflections";
+  icon: "today" | "journey" | "reflections" | "shop";
 };
 
 export const NAV_ITEMS: NavItem[] = [
   { key: "today", label: "Today", href: "/today", icon: "today" },
   { key: "journey", label: "Journey", href: "/journey", icon: "journey" },
   { key: "reflections", label: "Reflections", href: "/reflections", icon: "reflections" },
+  { key: "shop", label: "Shop", href: "/shop", icon: "shop" },
 ];

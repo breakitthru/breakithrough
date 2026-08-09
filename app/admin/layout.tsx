@@ -2,6 +2,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { requireStaffRaw } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { getConfig } from "@/lib/config";
 
 /*
   Admin shell. Identity + role are gated here (requireStaffRaw); 2FA is enforced
@@ -11,15 +12,17 @@ import { prisma } from "@/lib/prisma";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireStaffRaw();
   const name = user.displayName ?? user.name ?? user.email ?? "Owner";
+  const config = await getConfig();
 
   let alerts = 0;
   try {
-    const [sos, failed, redemptions] = await Promise.all([
+    const [sos, failed, redemptions, orders] = await Promise.all([
       prisma.sosEvent.count({ where: { reviewedAt: null } }),
       prisma.payment.count({ where: { status: "FAILED" } }),
       prisma.redemption.count({ where: { status: "REQUESTED" } }),
+      prisma.order.count({ where: { status: "PAID" } }),
     ]);
-    alerts = sos + failed + redemptions;
+    alerts = sos + failed + redemptions + orders;
   } catch {
     alerts = 0;
   }
@@ -30,6 +33,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         role={user.effectiveRole}
         displayName={name}
         avatarInitial={name.charAt(0).toUpperCase()}
+        logoUrl={config.logoUrl}
+        logoSize={config.logoSize}
       />
       <div className="ml-[248px] flex min-h-dvh flex-col">
         <AdminTopbar alerts={alerts} />

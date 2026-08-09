@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Lifebuoy, CreditCard, Gift, WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import { Lifebuoy, CreditCard, Gift, WarningCircle, Package } from "@phosphor-icons/react/dist/ssr";
 import { requireStaff } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { getConfig } from "@/lib/config";
@@ -9,10 +9,11 @@ import { Card } from "@/components/ui/card";
 export default async function AlertsPage() {
   await requireStaff();
   const config = await getConfig();
-  const [sos, failed, redemptions, helplines, rota] = await Promise.all([
+  const [sos, failed, redemptions, orders, helplines, rota] = await Promise.all([
     prisma.sosEvent.count({ where: { reviewedAt: null } }),
     prisma.payment.count({ where: { status: "FAILED" } }),
     prisma.redemption.count({ where: { status: "REQUESTED" } }),
+    prisma.order.count({ where: { status: "PAID" } }),
     prisma.helpline.count({ where: { active: true } }),
     prisma.siteConfig.findUnique({ where: { key: "onCallRota" } }),
   ]);
@@ -21,6 +22,7 @@ export default async function AlertsPage() {
   if (sos > 0) alerts.push({ icon: <Lifebuoy size={18} weight="fill" />, title: `${sos} SOS event${sos === 1 ? "" : "s"} to review`, href: "/admin/safety", tone: "var(--color-crisis)" });
   if (failed > 0) alerts.push({ icon: <CreditCard size={18} weight="fill" />, title: `${failed} failed payment${failed === 1 ? "" : "s"}`, href: "/admin/money/failed", tone: "var(--color-caution)" });
   if (redemptions > 0) alerts.push({ icon: <Gift size={18} weight="fill" />, title: `${redemptions} redemption${redemptions === 1 ? "" : "s"} to fulfil`, href: "/admin/money/rewards", tone: "var(--color-brand)" });
+  if (orders > 0) alerts.push({ icon: <Package size={18} weight="fill" />, title: `${orders} shop order${orders === 1 ? "" : "s"} to fulfil`, href: "/admin/shop/orders", tone: "var(--color-accent)" });
   if (!config.rupeePerPoint) alerts.push({ icon: <WarningCircle size={18} weight="fill" />, title: "₹ per point is still unset", href: "/admin/money/points", tone: "var(--color-caution)" });
   if (helplines === 0) alerts.push({ icon: <WarningCircle size={18} weight="fill" />, title: "No helplines configured", href: "/admin/safety/on-call", tone: "var(--color-crisis)" });
   if (!rota) alerts.push({ icon: <WarningCircle size={18} weight="fill" />, title: "On-call rota is empty", href: "/admin/safety/on-call", tone: "var(--color-caution)" });

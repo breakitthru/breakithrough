@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature } from "@/lib/razorpay";
+import { notifyOrderPlaced } from "@/lib/order-notify";
 
 /*
   Razorpay webhook. The reliable source of truth for payment state: it fires even
@@ -36,25 +37,43 @@ export async function POST(req: Request) {
   const paymentId = entity?.id;
   if (!orderId) return NextResponse.json({ ok: true }); // not a payment event we track
 
+  // Program access payment (Payment table)
   const payment = await prisma.payment.findFirst({ where: { razorpayOrderId: orderId } });
-  if (!payment) return NextResponse.json({ ok: true });
-
-  if (event.event === "payment.captured" && payment.status !== "PAID") {
-    await prisma.$transaction([
-      prisma.payment.update({
+  if (payment) {
+    if (event.event === "payment.captured" && payment.status !== "PAID") {
+      await prisma.$transaction([
+        prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: "PAID", razorpayPaymentId: paymentId ?? payment.razorpayPaymentId },
+        }),
+        prisma.user.updateMany({
+          where: { id: payment.userId, plan: { in: ["TRIAL", "EXPIRED"] } },
+          data: { plan: "ACTIVE", paidAt: new Date() },
+        }),
+      ]);
+    } else if (event.event === "payment.failed" && payment.status === "CREATED") {
+      await prisma.payment.update({
         where: { id: payment.id },
-        data: { status: "PAID", razorpayPaymentId: paymentId ?? payment.razorpayPaymentId },
-      }),
-      prisma.user.updateMany({
-        where: { id: payment.userId, plan: { in: ["TRIAL", "EXPIRED"] } },
-        data: { plan: "ACTIVE", paidAt: new Date() },
-      }),
-    ]);
-  } else if (event.event === "payment.failed" && payment.status === "CREATED") {
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: { status: "FAILED", razorpayPaymentId: paymentId ?? payment.razorpayPaymentId },
-    });
+        data: { status: "FAILED", razorpayPaymentId: paymentId ?? payment.razorpayPaymentId },
+      });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  // Shop order (Order table)
+  const order = await prisma.order.findFirst({ where: { razorpayOrderId: orderId }, include: { items: true } });
+  if (order) {
+    if (event.event === "payment.captured" && order.status !== "PAID" && order.status !== "FULFILLED") {
+      await prisma.$transaction([
+        prisma.order.update({ where: { id: order.id }, data: { status: "PAID", razorpayPaymentId: paymentId ?? order.razorpayPaymentId } }),
+        ...order.items
+          .filter((i) => i.shopItemId)
+          .map((i) => prisma.shopItem.updateMany({ where: { id: i.shopItemId!, stock: { not: null } }, data: { stock: { decrement: i.quantity } } })),
+      ]);
+      await notifyOrderPlaced(order.id);
+    } else if (event.event === "payment.failed" && order.status === "PENDING") {
+      await prisma.order.update({ where: { id: order.id }, data: { status: "FAILED", razorpayPaymentId: paymentId ?? order.razorpayPaymentId } });
+    }
   }
 
   return NextResponse.json({ ok: true });
