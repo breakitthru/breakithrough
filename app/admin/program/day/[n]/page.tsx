@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { requirePermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { isStreamConfigured } from "@/lib/cloudflare-stream";
 import { getPhases, phaseForDayIn } from "@/lib/config";
 import { PageHeader } from "@/components/admin/ui";
 import { DayEditor } from "@/components/admin/program/day-editor";
@@ -48,6 +49,7 @@ export default async function DayEditorPage({ params }: { params: Promise<{ n: s
           videoCount: t._count.videos,
         }))}
         videos={day.videos.map((v) => ({ id: v.id, title: v.title, streamUid: v.streamUid, durationSec: v.durationSec }))}
+        streamConfigured={isStreamConfigured}
       />
     </>
   );

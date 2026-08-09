@@ -9,6 +9,12 @@ const schema = z.object({
   AUTH_GOOGLE_ID: z.string().default(""),
   AUTH_GOOGLE_SECRET: z.string().default(""),
   AUTH_URL: z.string().default("http://localhost:3000"),
+  RAZORPAY_KEY_ID: z.string().default(""),
+  RAZORPAY_KEY_SECRET: z.string().default(""),
+  RAZORPAY_WEBHOOK_SECRET: z.string().default(""),
+  CLOUDFLARE_ACCOUNT_ID: z.string().default(""),
+  CLOUDFLARE_STREAM_TOKEN: z.string().default(""),
+  NEXT_PUBLIC_STREAM_CUSTOMER_SUBDOMAIN: z.string().default(""),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -35,6 +41,12 @@ export const env = parsed.success
       AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID ?? "",
       AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET ?? "",
       AUTH_URL: process.env.AUTH_URL ?? "http://localhost:3000",
+      RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID ?? "",
+      RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET ?? "",
+      RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET ?? "",
+      CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID ?? "",
+      CLOUDFLARE_STREAM_TOKEN: process.env.CLOUDFLARE_STREAM_TOKEN ?? "",
+      NEXT_PUBLIC_STREAM_CUSTOMER_SUBDOMAIN: process.env.NEXT_PUBLIC_STREAM_CUSTOMER_SUBDOMAIN ?? "",
       NODE_ENV:
         (process.env.NODE_ENV as "development" | "test" | "production") ?? "production",
     };

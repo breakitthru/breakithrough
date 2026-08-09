@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, PencilSimple, Trash, VideoCamera } from "@phosphor-icons/react";
+import { Plus, PencilSimple, Trash, VideoCamera, ArrowClockwise } from "@phosphor-icons/react";
 import { Card, Chip } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Drawer, Field, inputClass } from "@/components/admin/drawer";
 import { ConfirmButton } from "@/components/admin/confirm-button";
-import { createVideo, updateVideo, deleteVideo } from "@/lib/admin-program-actions";
+import { VideoUpload } from "@/components/admin/program/video-upload";
+import { createVideo, updateVideo, deleteVideo, refreshVideoStatus } from "@/lib/admin-program-actions";
 
 export type VideoItem = {
   id: string;
@@ -19,7 +20,7 @@ export type VideoItem = {
 
 const emptyV = { title: "", dayNumber: 1, streamUid: "", durationSec: 0 };
 
-export function VideoManager({ videos }: { videos: VideoItem[] }) {
+export function VideoManager({ videos, streamConfigured }: { videos: VideoItem[]; streamConfigured: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [open, setOpen] = useState(false);
@@ -43,6 +44,8 @@ export function VideoManager({ videos }: { videos: VideoItem[] }) {
       setOpen(false);
       router.refresh();
     });
+
+  const check = (id: string) => start(async () => { await refreshVideoStatus(id); router.refresh(); });
 
   return (
     <>
@@ -78,12 +81,20 @@ export function VideoManager({ videos }: { videos: VideoItem[] }) {
                   </td>
                   <td className="px-3 py-3 text-[var(--color-ink-muted)]">Day {v.dayNumber}</td>
                   <td className="px-3 py-3">
-                    <Chip tone={v.streamUid ? "success" : "neutral"} className="uppercase tracking-wide">
-                      {v.streamUid ? "Ready" : "No file"}
+                    <Chip
+                      tone={v.streamUid ? (v.durationSec ? "success" : "caution") : "neutral"}
+                      className="uppercase tracking-wide"
+                    >
+                      {v.streamUid ? (v.durationSec ? "Ready" : "Processing") : "No file"}
                     </Chip>
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex items-center justify-end gap-1 text-[var(--color-ink-muted)]">
+                      {v.streamUid && !v.durationSec && (
+                        <button onClick={() => check(v.id)} disabled={pending} title="Check status" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[var(--color-surface-sunken)]">
+                          <ArrowClockwise size={15} />
+                        </button>
+                      )}
                       <button onClick={() => openEdit(v)} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[var(--color-surface-sunken)]">
                         <PencilSimple size={15} />
                       </button>
@@ -121,12 +132,13 @@ export function VideoManager({ videos }: { videos: VideoItem[] }) {
         <Field label="Day" hint="Which day this clip belongs to (1–60).">
           <input type="number" min={1} max={60} className={inputClass} value={form.dayNumber} onChange={(e) => setForm({ ...form, dayNumber: Number(e.target.value) })} />
         </Field>
-        <Field label="Cloudflare Stream id (optional)" hint="Leave blank until the clip is uploaded and transcoded.">
-          <input className={inputClass} value={form.streamUid} onChange={(e) => setForm({ ...form, streamUid: e.target.value })} />
+        <Field label="Video" hint="Upload a clip and it goes straight to Cloudflare. Save once it's attached; it becomes Ready after transcoding.">
+          <VideoUpload value={form.streamUid} onChange={(uid) => setForm({ ...form, streamUid: uid })} configured={streamConfigured} />
         </Field>
-        <Field label="Duration (seconds)">
-          <input type="number" className={inputClass} value={form.durationSec} onChange={(e) => setForm({ ...form, durationSec: Number(e.target.value) })} />
-        </Field>
+        <details className="text-sm text-[var(--color-ink-muted)]">
+          <summary className="cursor-pointer select-none">Advanced: paste an existing Stream id</summary>
+          <input className={`${inputClass} mt-2`} placeholder="Cloudflare Stream id" value={form.streamUid} onChange={(e) => setForm({ ...form, streamUid: e.target.value })} />
+        </details>
         {error && <p className="text-sm text-[var(--color-crisis)]">{error}</p>}
       </Drawer>
     </>

@@ -1,5 +1,6 @@
 import { requirePermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { isStreamConfigured } from "@/lib/cloudflare-stream";
 import { PageHeader } from "@/components/admin/ui";
 import { ProgramTabs } from "@/components/admin/program/program-tabs";
 import { VideoManager } from "@/components/admin/program/video-manager";
@@ -19,6 +20,7 @@ export default async function VideosPage() {
       <ProgramTabs />
       <VideoManager
         videos={rows.map((v) => ({ id: v.id, title: v.title, dayNumber: v.day.dayNumber, streamUid: v.streamUid, durationSec: v.durationSec }))}
+        streamConfigured={isStreamConfigured}
       />
     </>
   );

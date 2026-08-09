@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Drawer, Field, inputClass } from "@/components/admin/drawer";
 import { ConfirmButton } from "@/components/admin/confirm-button";
+import { VideoUpload } from "@/components/admin/program/video-upload";
 import {
   createTask,
   updateTask,
@@ -51,12 +52,14 @@ export function DayEditor({
   isMilestone,
   tasks,
   videos,
+  streamConfigured,
 }: {
   dayNumber: number;
   title: string | null;
   isMilestone: boolean;
   tasks: TaskRow[];
   videos: VideoRow[];
+  streamConfigured: boolean;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -294,11 +297,8 @@ export function DayEditor({
         <Field label="Title">
           <input className={inputClass} value={vForm.title} onChange={(e) => setVForm({ ...vForm, title: e.target.value })} />
         </Field>
-        <Field label="Cloudflare Stream id (optional)" hint="Leave blank until the clip is uploaded and transcoded.">
-          <input className={inputClass} value={vForm.streamUid} onChange={(e) => setVForm({ ...vForm, streamUid: e.target.value })} />
-        </Field>
-        <Field label="Duration (seconds)">
-          <input type="number" className={inputClass} value={vForm.durationSec} onChange={(e) => setVForm({ ...vForm, durationSec: Number(e.target.value) })} />
+        <Field label="Video" hint="Upload a clip and it goes straight to Cloudflare. It becomes Ready after transcoding.">
+          <VideoUpload value={vForm.streamUid} onChange={(uid) => setVForm({ ...vForm, streamUid: uid })} configured={streamConfigured} />
         </Field>
         {vError && <p className="text-sm text-[var(--color-crisis)]">{vError}</p>}
       </Drawer>

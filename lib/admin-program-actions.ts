@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAudit } from "@/lib/audit";
+import { createDirectUpload, getStreamStatus, deleteStreamVideo, isStreamConfigured } from "@/lib/cloudflare-stream";
 
 /*
   Program authoring mutations (direct-edit live). Each authorises, writes, logs
@@ -146,6 +147,47 @@ const videoSchema = z.object({
   durationSec: z.coerce.number().int().min(0).max(36000).optional().nullable(),
 });
 
+/**
+ * Mint a one-time Cloudflare Stream upload URL. The browser uploads the file
+ * straight to Cloudflare and gets back the `uid`, which is saved via createVideo.
+ */
+export async function startVideoUpload(
+  name?: string,
+): Promise<{ ok: true; uploadURL: string; uid: string } | { ok: false; error: string }> {
+  await requirePermission("videos.edit");
+  if (!isStreamConfigured) {
+    return { ok: false, error: "Video hosting isn't connected yet. Add the Cloudflare account id and Stream API token in the environment, then redeploy." };
+  }
+  try {
+    const up = await createDirectUpload({ name });
+    return { ok: true, uploadURL: up.uploadURL, uid: up.uid };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Could not start the upload" };
+  }
+}
+
+/** Re-check a clip's transcode status on Cloudflare and record its duration once ready. */
+export async function refreshVideoStatus(id: string): Promise<ActionResult> {
+  const admin = await requirePermission("videos.edit");
+  const v = await prisma.video.findUnique({ where: { id }, include: { day: { select: { dayNumber: true } } } });
+  if (!v) return { ok: false, error: "Video not found" };
+  if (!v.streamUid) return { ok: false, error: "Nothing uploaded to check yet" };
+  const status = await getStreamStatus(v.streamUid);
+  if (!status) return { ok: false, error: "Could not reach Cloudflare Stream" };
+  await prisma.video.update({
+    where: { id },
+    data: {
+      // duration is only recorded once the clip is playable, so its presence doubles as the "Ready" flag
+      durationSec: status.readyToStream && status.durationSec ? status.durationSec : v.durationSec,
+      posterKey: status.thumbnail ?? v.posterKey,
+    },
+  });
+  void admin;
+  revalidateProgram(v.day.dayNumber);
+  revalidatePath("/admin/program/videos");
+  return { ok: true };
+}
+
 export async function createVideo(input: VideoInput): Promise<ActionResult> {
   const admin = await requirePermission("videos.edit");
   const parsed = videoSchema.safeParse(input);
@@ -185,6 +227,7 @@ export async function deleteVideo(id: string): Promise<ActionResult> {
   const admin = await requirePermission("videos.edit");
   const v = await prisma.video.findUnique({ where: { id }, include: { day: { select: { dayNumber: true } } } });
   if (!v) return { ok: false, error: "Video not found" };
+  if (v.streamUid) await deleteStreamVideo(v.streamUid);
   await prisma.video.delete({ where: { id } });
   await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "video.delete", targetType: "Video", targetId: id, summary: `Deleted video "${v.title}"` });
   revalidateProgram(v.day.dayNumber);
