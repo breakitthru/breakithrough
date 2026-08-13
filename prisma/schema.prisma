@@ -425,11 +425,30 @@ model Payment {
   user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   amountInr         Int
   status            PaymentStatus @default(CREATED)
+  promoCode         String? // uppercased code applied at checkout, if any
   razorpayOrderId   String?
   razorpayPaymentId String?
   createdAt         DateTime      @default(now())
 
   @@index([userId])
+}
+
+enum DiscountType {
+  PERCENT // value = percent off (1-100)
+  FLAT // value = flat rupees off
+}
+
+// Admin-managed discount codes for the one-time program purchase.
+model PromoCode {
+  id             String       @id @default(cuid())
+  code           String       @unique // stored uppercased
+  discountType   DiscountType @default(PERCENT)
+  value          Int // percent (PERCENT) or rupees (FLAT)
+  active         Boolean      @default(true)
+  maxRedemptions Int? // null = unlimited
+  redeemedCount  Int          @default(0)
+  expiresAt      DateTime?
+  createdAt      DateTime     @default(now())
 }
 
 // ─────────────────────────────────────────────────────────────

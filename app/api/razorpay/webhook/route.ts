@@ -51,6 +51,9 @@ export async function POST(req: Request) {
           data: { plan: "ACTIVE", paidAt: new Date() },
         }),
       ]);
+      if (payment.promoCode) {
+        await prisma.promoCode.updateMany({ where: { code: payment.promoCode }, data: { redeemedCount: { increment: 1 } } });
+      }
     } else if (event.event === "payment.failed" && payment.status === "CREATED") {
       await prisma.payment.update({
         where: { id: payment.id },

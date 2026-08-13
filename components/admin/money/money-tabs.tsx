@@ -9,6 +9,7 @@ const TABS = [
   { label: "Failed payments", href: "/admin/money/failed" },
   { label: "Points economy", href: "/admin/money/points" },
   { label: "Rewards", href: "/admin/money/rewards" },
+  { label: "Promo codes", href: "/admin/money/promos" },
 ];
 
 export function MoneyTabs() {

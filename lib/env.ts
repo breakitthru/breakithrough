@@ -15,6 +15,9 @@ const schema = z.object({
   CLOUDFLARE_ACCOUNT_ID: z.string().default(""),
   CLOUDFLARE_STREAM_TOKEN: z.string().default(""),
   NEXT_PUBLIC_STREAM_CUSTOMER_SUBDOMAIN: z.string().default(""),
+  AI_PROVIDER: z.string().default("openai"),
+  AI_API_KEY: z.string().default(""),
+  AI_MODEL: z.string().default("gpt-4o-mini"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -47,6 +50,9 @@ export const env = parsed.success
       CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID ?? "",
       CLOUDFLARE_STREAM_TOKEN: process.env.CLOUDFLARE_STREAM_TOKEN ?? "",
       NEXT_PUBLIC_STREAM_CUSTOMER_SUBDOMAIN: process.env.NEXT_PUBLIC_STREAM_CUSTOMER_SUBDOMAIN ?? "",
+      AI_PROVIDER: process.env.AI_PROVIDER ?? "openai",
+      AI_API_KEY: process.env.AI_API_KEY ?? "",
+      AI_MODEL: process.env.AI_MODEL ?? "gpt-4o-mini",
       NODE_ENV:
         (process.env.NODE_ENV as "development" | "test" | "production") ?? "production",
     };

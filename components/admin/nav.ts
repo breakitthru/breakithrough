@@ -28,7 +28,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Program",
     items: [
       { key: "program", label: "Program", href: "/admin/program", icon: "program", permission: "program.edit" },
-      { key: "daylight", label: "Daylight", href: "/admin/daylight", icon: "daylight", comingSoon: true },
+      { key: "daylight", label: "Daylight", href: "/admin/daylight", icon: "daylight", permission: "settings.edit" },
     ],
   },
   {
