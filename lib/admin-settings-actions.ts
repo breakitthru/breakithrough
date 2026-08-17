@@ -18,6 +18,35 @@ export async function setSettingsConfig(key: string, value: unknown): Promise<Re
   return { ok: true };
 }
 
+/**
+ * Set (or clear) the Daylight AI key. Stored in SiteConfig ("aiApiKey"); read
+ * only server-side via getAiSettings(). Pass an empty string to remove it and
+ * fall back to the environment variable. The key value is never written to the
+ * audit log — only the fact that it changed.
+ */
+export async function setAiApiKey(rawKey: string): Promise<Result> {
+  const admin = await requirePermission("settings.edit");
+  const key = (rawKey ?? "").trim();
+  if (key && !/^sk-[A-Za-z0-9_-]{20,}$/.test(key)) {
+    return { ok: false, error: "That doesn't look like an OpenAI key. It should start with \"sk-\"." };
+  }
+  await prisma.siteConfig.upsert({
+    where: { key: "aiApiKey" },
+    update: { value: key as never },
+    create: { key: "aiApiKey", value: key as never },
+  });
+  await logAudit({
+    actorId: admin.id,
+    actorEmail: admin.email,
+    action: "config.set",
+    targetType: "SiteConfig",
+    targetId: "aiApiKey",
+    summary: key ? "Updated the Daylight AI key" : "Removed the Daylight AI key",
+  });
+  revalidatePath("/admin/daylight");
+  return { ok: true };
+}
+
 const LOGO_DATA_URL = /^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$/;
 
 /**

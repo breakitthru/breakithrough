@@ -35,6 +35,9 @@ export async function getConfig(): Promise<AppConfig> {
     const { prisma } = await import("@/lib/prisma");
     const rows = await prisma.siteConfig.findMany();
     const overrides = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+    // The AI key is a secret — read it only via getAiSettings() in lib/ai.ts,
+    // never through the app config that flows into client components.
+    delete (overrides as Record<string, unknown>).aiApiKey;
     return { ...CONFIG_DEFAULTS, ...overrides } as AppConfig;
   } catch {
     return CONFIG_DEFAULTS;

@@ -21,7 +21,7 @@ export async function sendDaylightMessage(text: string): Promise<SendResult> {
   const trimmed = (text ?? "").trim();
   if (!trimmed) return { ok: false, error: "Say something first." };
   if (trimmed.length > 4000) return { ok: false, error: "That message is a little long — try shortening it." };
-  if (!isAiConfigured) return { ok: false, error: "Daylight isn't switched on yet. Please try again later." };
+  if (!(await isAiConfigured())) return { ok: false, error: "Daylight isn't switched on yet. Please try again later." };
 
   // Persist the member's message first so it survives even if the AI call fails.
   await prisma.chatMessage.create({ data: { userId: user.id, role: "USER", content: trimmed } });

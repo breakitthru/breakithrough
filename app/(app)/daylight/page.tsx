@@ -15,7 +15,7 @@ export default async function DaylightPage() {
   return (
     <DaylightChat
       history={rows.map((r) => ({ role: r.role, content: r.content }))}
-      configured={isAiConfigured}
+      configured={await isAiConfigured()}
     />
   );
 }
