@@ -206,16 +206,13 @@ export function Landing() {
             <blockquote className="font-display text-xl leading-relaxed sm:text-2xl">
               &ldquo;I built these 60 days so you&apos;re never guessing what to do next. Start small — I&apos;ve got the structure.&rdquo;
             </blockquote>
-            <figcaption className="mt-6 flex items-center justify-center gap-3 text-left">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-brand-subtle)] text-[0.6rem] text-[var(--color-brand-subtle-ink)]">Photo</span>
-              <span className="text-sm">
-                <span className="block font-semibold text-[var(--color-ink)]">Clinical Psychologist · 12 years in practice</span>
-                <span className="block text-[var(--color-ink-muted)]">Author of the 60-day program</span>
-              </span>
+            <figcaption className="mt-6 text-sm">
+              <span className="block font-semibold text-[var(--color-ink)]">Dr. [Clinician Name]</span>
+              <span className="block text-[var(--color-ink-muted)]">Clinical Psychologist · Author of the 60-day program</span>
             </figcaption>
           </figure>
           <p className="mt-5 inline-block rounded-[var(--radius-pill)] border border-dashed border-[var(--color-accent)] px-4 py-1 text-xs text-[var(--color-accent-subtle-ink)]">
-            Name, photo &amp; credentials to be supplied by the client before launch
+            Clinician name &amp; credentials to be supplied by the client before launch
           </p>
         </div>
       </section>
