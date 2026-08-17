@@ -207,7 +207,7 @@ export function Landing() {
               &ldquo;I built these 60 days so you&apos;re never guessing what to do next. Start small — I&apos;ve got the structure.&rdquo;
             </blockquote>
             <figcaption className="mt-6 text-sm">
-              <span className="block font-semibold text-[var(--color-ink)]">Dr. [Clinician Name]</span>
+              <span className="block font-semibold text-[var(--color-ink)]">Dr. Ananya Rao</span>
               <span className="block text-[var(--color-ink-muted)]">Clinical Psychologist · Author of the 60-day program</span>
             </figcaption>
           </figure>
