@@ -79,17 +79,17 @@ export function AdminSidebar({
         <BrandLogo
           logoUrl={logoUrl}
           logoSize={logoSize}
-          alt="Logo"
+          alt="Break It Thru"
           fallback={
-            <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] border border-dashed border-white/25 text-[0.6rem] text-white/50">
-              LOGO
-            </div>
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-on-dark.svg" alt="Break It Thru" className="h-11 w-auto" />
+            </>
           }
         />
-        <div className="leading-tight">
-          <p className="text-sm font-semibold">Break It Thru</p>
-          <p className="text-[0.6rem] uppercase tracking-[0.16em] text-white/45">Admin</p>
-        </div>
+        <span className="rounded-full bg-white/5 px-2 py-0.5 text-[0.6rem] uppercase tracking-[0.16em] text-white/45">
+          Admin
+        </span>
       </div>
 
       {/* Nav */}

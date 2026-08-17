@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F1D38A"/>
+      <stop offset="0.48" stop-color="#C79A3B"/>
+      <stop offset="1" stop-color="#8F681F"/>
+    </linearGradient>
+    <linearGradient id="ivory" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFDF7"/>
+      <stop offset="1" stop-color="#DED7C9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="#0e241a"/>
+
+  <!-- door monogram, scaled + centred from the master logo -->
+  <g transform="translate(-384,-44.8) scale(0.8)">
+    <path d="M590 285 L800 150 L1010 285 L1010 515 L890 442 L890 315 L800 257 L710 315 L710 442 L590 515 Z" fill="#E7DFD0"/>
+    <path d="M710 315 L800 257 L800 545 L710 602 Z" fill="url(#ivory)"/>
+    <path d="M800 257 L890 315 L890 442 L800 386 Z" fill="url(#gold)"/>
+    <path d="M800 386 L890 442 L800 545 Z" fill="#F7F0DF" opacity="0.98"/>
+    <path d="M1078 154 l4 13 13 4-13 4-4 13-4-13-13-4 13-4 4-13Z" fill="url(#gold)"/>
+  </g>
+</svg>

@@ -48,11 +48,12 @@ export function Sidebar({
         <BrandLogo
           logoUrl={logoUrl}
           logoSize={logoSize}
-          alt="Logo"
+          alt="Break It Thru"
           fallback={
-            <div className="flex h-14 w-full items-center justify-center rounded-[var(--radius-md)] border border-dashed border-white/25 text-sm text-white/50">
-              Logo
-            </div>
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-on-dark.svg" alt="Break It Thru" className="h-14 w-auto" />
+            </>
           }
         />
       </div>

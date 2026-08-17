@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="290 120 1020 730" fill="none" role="img" aria-label="Break It Thru">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F1D38A"/>
+      <stop offset="0.48" stop-color="#C79A3B"/>
+      <stop offset="1" stop-color="#8F681F"/>
+    </linearGradient>
+    <linearGradient id="ivory" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFDF7"/>
+      <stop offset="1" stop-color="#DED7C9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- BREAKTHROUGH / OPEN-DOOR MONOGRAM -->
+  <g>
+    <path d="M590 285 L800 150 L1010 285 L1010 515 L890 442 L890 315 L800 257 L710 315 L710 442 L590 515 Z" fill="#151515"/>
+    <path d="M710 315 L800 257 L800 545 L710 602 Z" fill="url(#ivory)"/>
+    <path d="M800 257 L890 315 L890 442 L800 386 Z" fill="url(#gold)"/>
+    <path d="M800 386 L890 442 L800 545 Z" fill="#F7F0DF" opacity="0.98"/>
+  </g>
+
+  <!-- breakthrough point -->
+  <path d="M1078 154 l4 13 13 4-13 4-4 13-4-13-13-4 13-4 4-13Z" fill="url(#gold)"/>
+
+  <!-- birds -->
+  <g stroke="#1A1A1A" stroke-width="5" stroke-linecap="round" fill="none">
+    <path d="M1095 205 q10 -9 20 0 q10 -9 20 0"/>
+    <path d="M1165 178 q9 -8 18 0 q9 -8 18 0"/>
+    <path d="M1218 226 q9 -8 18 0 q9 -8 18 0"/>
+    <path d="M1135 244 q9 -8 18 0 q9 -8 18 0"/>
+    <path d="M1250 190 q8 -7 16 0 q8 -7 16 0"/>
+  </g>
+
+  <!-- WORDMARK -->
+  <g font-family="Montserrat, Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="78" font-weight="500" letter-spacing="12">
+    <text x="610" y="710" text-anchor="middle" fill="#151515">BREAK</text>
+    <text x="800" y="710" text-anchor="middle" fill="url(#gold)" font-weight="650" letter-spacing="4">IT</text>
+    <text x="990" y="710" text-anchor="middle" fill="#151515">THRU</text>
+  </g>
+
+  <!-- separator / tagline -->
+  <g fill="none" stroke="url(#gold)" stroke-width="3">
+    <path d="M325 780 H600"/>
+    <path d="M1000 780 H1275"/>
+  </g>
+  <circle cx="615" cy="780" r="3.5" fill="#C79A3B"/>
+  <circle cx="985" cy="780" r="3.5" fill="#C79A3B"/>
+
+  <text x="800" y="788" text-anchor="middle" font-family="Montserrat, Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="28" font-weight="500" letter-spacing="8" fill="#2A2A2A">TURNING POTENTIAL INTO REALITY</text>
+</svg>

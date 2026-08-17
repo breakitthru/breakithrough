@@ -31,11 +31,12 @@ export async function SplitCanvas({
         <BrandLogo
           logoUrl={config.logoUrl}
           logoSize={config.logoSize}
-          alt="Logo"
+          alt="Break It Thru"
           fallback={
-            <div className="flex h-12 w-28 items-center justify-center rounded-[var(--radius-md)] border border-dashed border-white/25 text-sm text-white/50">
-              Logo
-            </div>
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-on-dark.svg" alt="Break It Thru" className="h-20 w-auto" />
+            </>
           }
         />
         <div className="relative z-10">

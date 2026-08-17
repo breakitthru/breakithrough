@@ -15,11 +15,12 @@ export default async function SosLayout({ children }: { children: React.ReactNod
           <BrandLogo
             logoUrl={config.logoUrl}
             logoSize={config.logoSize}
-            alt="Logo"
+            alt="Break It Thru"
             fallback={
-              <span className="flex h-9 w-20 items-center justify-center rounded-[var(--radius-sm)] border border-dashed border-[var(--color-line-strong)] text-xs text-[var(--color-ink-faint)]">
-                Logo
-              </span>
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.svg" alt="Break It Thru" className="h-10 w-auto" />
+              </>
             }
           />
         </Link>
