@@ -86,9 +86,9 @@ export function Landing() {
     <div className="bg-[var(--color-canvas)] text-[var(--color-ink)]">
       {/* ── Nav ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-canvas)]/90 backdrop-blur">
-        <div className={cn(SHELL, "flex h-16 items-center justify-between")}>
+        <div className={cn(SHELL, "flex h-20 items-center justify-between")}>
           <Link href="/" aria-label="Break It Thru home" className="flex items-center">
-            <img src="/logo.svg" alt="Break It Thru" className="h-9 w-auto" />
+            <img src="/logo.svg" alt="Break It Thru" className="h-14 w-auto" />
           </Link>
           <nav className="hidden items-center gap-7 text-sm text-[var(--color-ink-muted)] md:flex">
             <a href="#how" className="hover:text-[var(--color-ink)]">How it works</a>
@@ -342,7 +342,7 @@ export function Landing() {
         <div className={cn(SHELL, "border-t border-white/10 py-14")}>
           <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4">
             <div className="sm:col-span-2 md:col-span-1">
-              <img src="/logo-on-dark.svg" alt="Break It Thru" className="h-12 w-auto" />
+              <img src="/logo-on-dark.svg" alt="Break It Thru" className="h-20 w-auto" />
               <p className="mt-4 max-w-xs text-sm text-white/50">A 60-day recovery program, written by a clinician. Encouragement, never punishment.</p>
             </div>
             <FooterCol title="Product" links={[
