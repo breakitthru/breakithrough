@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   Trophy,
   Bell,
-  VideoCamera,
   UsersThree,
   PencilSimpleLine,
 } from "@phosphor-icons/react/dist/ssr";
@@ -163,13 +162,6 @@ export default async function TodayPage() {
 
       {/* Right context rail */}
       <aside className="hidden flex-col gap-4 lg:flex">
-        <Link href="/sessions">
-          <Card className="p-5 transition-colors hover:border-[var(--color-line-strong)]">
-            <VideoCamera size={22} className="text-[var(--color-ink-muted)]" />
-            <h4 className="mt-3 font-semibold text-[var(--color-ink)]">1:1 Sessions</h4>
-            <p className="mt-0.5 text-sm text-[var(--color-ink-muted)]">Book when you need it</p>
-          </Card>
-        </Link>
         <Link href="/community">
           <Card className="p-5 transition-colors hover:border-[var(--color-line-strong)]">
             <UsersThree size={22} className="text-[var(--color-ink-muted)]" />

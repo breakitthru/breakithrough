@@ -23,14 +23,14 @@ const APP_SHELL = [
   "/trial",
   "/community",
   "/daylight",
-  "/sessions",
 ];
 
 const LINK = "text-white/60 transition-colors hover:text-white";
 
 export function SiteFooter() {
   const pathname = usePathname();
-  if (pathname.startsWith("/admin")) return null;
+  // Admin has its own chrome; the marketing landing ("/") ships its own full footer.
+  if (pathname.startsWith("/admin") || pathname === "/") return null;
 
   const inShell = APP_SHELL.some((p) => pathname === p || pathname.startsWith(p + "/"));
   const year = new Date().getFullYear();

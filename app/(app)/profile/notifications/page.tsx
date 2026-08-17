@@ -6,7 +6,6 @@ import { Toggle } from "@/components/ui/toggle";
 // Notification settings (D83). No phone/WhatsApp in scope — email + in-app only.
 const rows = [
   { label: "Daily gentle reminder", sub: "A nudge to open today.", on: true },
-  { label: "Session reminders", sub: "Before a booked 1:1.", on: true },
   { label: "Reward & badge updates", sub: "When you earn something.", on: true },
   { label: "Quiet hours", sub: "Nothing between 10pm and 8am.", on: true },
 ];

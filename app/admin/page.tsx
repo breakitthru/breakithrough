@@ -55,7 +55,6 @@ export default async function AdminOverviewPage() {
           value={m.completedYesterdayPct === null ? "—" : `${m.completedYesterdayPct}%`}
           hint={m.launched ? `${m.completedYesterday} of ${m.totalMembers}` : "No days completed yet"}
         />
-        <StatTile label="Sessions today" value="—" hint="Sessions are not live yet" />
         <StatTile
           label="SOS · last 24 hours"
           value={m.sosLast24h}

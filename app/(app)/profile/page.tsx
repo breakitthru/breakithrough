@@ -3,7 +3,6 @@ import {
   CreditCard,
   Bell,
   ShieldCheck,
-  VideoCamera,
   Path,
   Question,
   CaretRight,
@@ -77,13 +76,12 @@ export default async function ProfilePage() {
       <p className="eyebrow mb-3">Account</p>
       <Card className="mb-8 divide-y divide-[var(--color-line)] p-0">
         <Row icon={<CreditCard size={18} />} title="Your program" sub={`${PLAN_LABEL[user.plan]} · Day ${today} of ${config.programDays}`} href="/profile/plan" />
-        <Row icon={<Bell size={18} />} title="Notifications" sub="Sessions & gentle reminders" href="/profile/notifications" />
+        <Row icon={<Bell size={18} />} title="Notifications" sub="Gentle reminders" href="/profile/notifications" />
         <Row icon={<ShieldCheck size={18} />} title="Privacy center" sub="DPDP · you control your data" href="/profile/privacy" />
       </Card>
 
       <p className="eyebrow mb-3">Your journey</p>
       <Card className="mb-8 divide-y divide-[var(--color-line)] p-0">
-        <Row icon={<VideoCamera size={18} />} title="1:1 Sessions" sub="Book or manage your sessions" href="/sessions" />
         <Row icon={<Path size={18} />} title="Journey history" sub={`Day ${today} of ${config.programDays} · Phase ${phase.order} of 4`} href="/journey" />
       </Card>
 

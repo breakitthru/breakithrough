@@ -43,7 +43,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: "Business",
     items: [
-      { key: "sessions", label: "Sessions", href: "/admin/sessions", icon: "sessions", comingSoon: true },
       { key: "money", label: "Money", href: "/admin/money", icon: "money", permission: "money.view" },
       { key: "shop", label: "Shop", href: "/admin/shop", icon: "shop", permission: "shop.manage" },
       { key: "orders", label: "Orders", href: "/admin/shop/orders", icon: "orders", permission: "shop.manage" },
