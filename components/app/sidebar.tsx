@@ -44,7 +44,7 @@ export function Sidebar({
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-[264px] flex-col bg-[var(--color-brand-ink)] px-4 py-6 text-[var(--color-brand-fg)]">
       {/* Logo */}
-      <div className="mx-1 mb-8 flex items-center">
+      <div className="mx-1 mb-8 flex items-center justify-center">
         <BrandLogo
           logoUrl={logoUrl}
           logoSize={logoSize}
@@ -52,7 +52,7 @@ export function Sidebar({
           fallback={
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-on-dark.svg" alt="Break It Thru" className="h-14 w-auto" />
+              <img src="/logo-on-dark.svg" alt="Break It Thru" className="h-28 w-auto" />
             </>
           }
         />
