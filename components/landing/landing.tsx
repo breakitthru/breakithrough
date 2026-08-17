@@ -211,9 +211,6 @@ export function Landing() {
               <span className="block text-[var(--color-ink-muted)]">Clinical Psychologist · Author of the 60-day program</span>
             </figcaption>
           </figure>
-          <p className="mt-5 inline-block rounded-[var(--radius-pill)] border border-dashed border-[var(--color-accent)] px-4 py-1 text-xs text-[var(--color-accent-subtle-ink)]">
-            Clinician name &amp; credentials to be supplied by the client before launch
-          </p>
         </div>
       </section>
 
