@@ -42,7 +42,7 @@ export function Sidebar({
   const current = pending ?? pathname;
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-[264px] flex-col bg-[var(--color-brand-ink)] px-4 py-6 text-[var(--color-brand-fg)]">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col bg-[var(--color-brand-ink)] px-4 py-6 text-[var(--color-brand-fg)] lg:flex">
       {/* Logo */}
       <div className="mx-1 mb-8 flex items-center justify-center">
         <BrandLogo

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Flag } from "@phosphor-icons/react";
 import type { DayStatus } from "@/lib/program";
@@ -10,33 +10,35 @@ import type { DayStatus } from "@/lib/program";
   path threads their centres. It scrolls the whole program; the sticky header and
   the sticky bottom bar both update to whichever phase is currently in view.
 */
-const WIDTH = 560;
-const CENTER_X = WIDTH / 2;
-const AMP = 132;
+// The road is drawn at BASE_WIDTH on desktop and scaled down to fit narrower
+// viewports. The wave amplitude stays proportional to the width (AMP_RATIO) so
+// the S-curve keeps its shape on a phone without overflowing the screen.
+const BASE_WIDTH = 560;
+const AMP_RATIO = 132 / BASE_WIDTH;
 const ROW_H = 84;
 const FREQ = 0.8; // tighter wave — more oscillations packed down the page
 const PAD_Y = 60;
 const PHASE_GAP = 72; // extra breathing room + room for the phase marker
 const TRAIL = "#33503f"; // dark evergreen dots
 
-function nodeX(i: number) {
-  return CENTER_X + Math.sin((i + 0.6) * FREQ) * AMP;
+function nodeX(i: number, centerX: number, amp: number) {
+  return centerX + Math.sin((i + 0.6) * FREQ) * amp;
 }
 
 // Trace the trail along the actual sine wave (not just straight hops between
 // node centres) by sampling many points per segment. x follows the continuous
 // sine so the curve flows smoothly; y interpolates between node rows. The nodes
 // sit exactly on this curve.
-function tracePath(nodes: { y: number }[]) {
+function tracePath(nodes: { y: number }[], centerX: number, amp: number) {
   if (nodes.length < 2) return "";
   const STEPS = 20;
-  const cmds = [`M ${nodeX(0).toFixed(1)} ${nodes[0].y.toFixed(1)}`];
+  const cmds = [`M ${nodeX(0, centerX, amp).toFixed(1)} ${nodes[0].y.toFixed(1)}`];
   for (let i = 0; i < nodes.length - 1; i++) {
     const y0 = nodes[i].y;
     const y1 = nodes[i + 1].y;
     for (let s = 1; s <= STEPS; s++) {
       const f = s / STEPS;
-      const x = nodeX(i + f);
+      const x = nodeX(i + f, centerX, amp);
       const y = y0 + (y1 - y0) * f;
       cmds.push(`L ${x.toFixed(1)} ${y.toFixed(1)}`);
     }
@@ -102,6 +104,22 @@ export function JourneyRoad({
   const [active, setActive] = useState(currentPhaseOrder);
   const markRefs = useRef<Record<number, HTMLElement | null>>({});
 
+  // Fit the road to the viewport: measure the wrapper and cap the drawing width
+  // at BASE_WIDTH so it never overflows on a phone. Amplitude scales with it.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(BASE_WIDTH);
+  useLayoutEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const measure = () => setWidth(Math.min(BASE_WIDTH, el.clientWidth));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const centerX = width / 2;
+  const amp = width * AMP_RATIO;
+
   // Scrollspy: the active phase is the last one whose marker has crossed a line
   // ~30% down the viewport.
   useEffect(() => {
@@ -136,10 +154,10 @@ export function JourneyRoad({
       y += ROW_H;
       if (d.phaseOrder !== days[i - 1].phaseOrder) y += PHASE_GAP;
     }
-    return { ...d, x: nodeX(i), y };
+    return { ...d, x: nodeX(i, centerX, amp), y };
   });
   const roadHeight = (nodes[nodes.length - 1]?.y ?? PAD_Y) + PAD_Y;
-  const pathD = tracePath(nodes);
+  const pathD = tracePath(nodes, centerX, amp);
 
   const firstYByPhase: Record<number, number> = {};
   for (const n of nodes) {
@@ -149,9 +167,9 @@ export function JourneyRoad({
   const activePhase = phases.find((p) => p.order === active) ?? phases[0];
 
   return (
-    <div className="mx-auto max-w-[760px]">
+    <div ref={wrapRef} className="mx-auto max-w-[760px]">
       {/* Sticky header — its phase marking updates as you scroll */}
-      <header className="sticky top-0 z-20 -mx-10 mb-2 flex items-start justify-between gap-4 bg-[var(--color-canvas)]/95 px-10 pb-4 pt-2 backdrop-blur">
+      <header className="sticky top-0 z-20 -mx-5 mb-2 flex items-start justify-between gap-4 bg-[var(--color-canvas)]/95 px-5 pb-4 pt-2 backdrop-blur lg:-mx-10 lg:px-10">
         <div>
           <p className="eyebrow text-[var(--color-accent)]">
             Phase {activePhase.order} · Days {activePhase.dayStart}&ndash;{activePhase.dayEnd}
@@ -166,8 +184,8 @@ export function JourneyRoad({
       </header>
 
       {/* The road */}
-      <div className="relative mx-auto" style={{ width: WIDTH, height: roadHeight }}>
-        <svg width={WIDTH} height={roadHeight} className="absolute inset-0" aria-hidden>
+      <div className="relative mx-auto" style={{ width, height: roadHeight }}>
+        <svg width={width} height={roadHeight} className="absolute inset-0" aria-hidden>
           <path
             d={pathD}
             fill="none"
@@ -208,7 +226,7 @@ export function JourneyRoad({
         })}
 
         {nodes.map((p) => {
-          const pillLeft = p.x > CENTER_X;
+          const pillLeft = p.x > centerX;
           const circle = <DayCircle day={p.day} status={p.status} />;
           return (
             <div
@@ -239,7 +257,7 @@ export function JourneyRoad({
       </div>
 
       {/* Sticky bottom bar — reflects the phase you're currently looking at */}
-      <div className="sticky bottom-4 z-20 mt-6 flex justify-center">
+      <div className="sticky bottom-24 z-20 mt-6 flex justify-center lg:bottom-4">
         <div className="inline-flex items-center gap-3 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[var(--color-surface)] py-2 pl-2 pr-5 shadow-[var(--shadow-card)]">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-brand-subtle)] text-[var(--color-brand-subtle-ink)]">
             <Flag size={16} weight="fill" />

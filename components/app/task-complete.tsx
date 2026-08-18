@@ -27,7 +27,7 @@ export function TaskComplete({
 
   if (completed) {
     return (
-      <div className="sticky bottom-6 mt-10 flex items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-[var(--color-success-subtle)] py-4 font-medium text-[var(--color-success)]">
+      <div className="sticky bottom-24 mt-10 flex items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-[var(--color-success-subtle)] py-4 font-medium text-[var(--color-success)] lg:bottom-6">
         <CheckCircle size={20} weight="fill" /> Done — nice work
       </div>
     );
@@ -70,7 +70,7 @@ export function TaskComplete({
           {error}
         </p>
       )}
-      <div className="sticky bottom-6 mt-8">
+      <div className="sticky bottom-24 mt-8 lg:bottom-6">
         <Button variant="primary" size="lg" className="w-full" onClick={mark} disabled={busy}>
           {busy ? "Saving…" : `Mark complete · +${points}`}
         </Button>

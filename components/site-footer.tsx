@@ -36,7 +36,14 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className={cn("bg-[var(--color-brand-ink)] text-[0.8rem]", inShell && "pl-[264px]")}>
+    <footer
+      className={cn(
+        "bg-[var(--color-brand-ink)] text-[0.8rem]",
+        // Inside the member shell the bottom tab bar replaces the footer on
+        // phones; on desktop the footer clears the fixed sidebar.
+        inShell && "hidden lg:block lg:pl-[264px]",
+      )}
+    >
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-[1180px] flex-col gap-3 px-8 py-5 md:flex-row md:items-center md:justify-between">
           <nav className="flex flex-wrap items-center gap-x-3 gap-y-2">

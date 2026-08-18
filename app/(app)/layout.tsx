@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/app/sidebar";
+import { MobileTabbar } from "@/components/app/mobile-tabbar";
 import { DaylightDock } from "@/components/app/daylight-dock";
 import { requireOnboardedUser } from "@/lib/session";
 import { hasAdminAccess } from "@/lib/admin";
@@ -26,10 +27,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         logoUrl={config.logoUrl}
         logoSize={config.logoSize}
       />
-      <main className="ml-[264px] min-h-dvh">
-        <div className="mx-auto w-full max-w-[1180px] px-10 py-10">{children}</div>
+      <main className="min-h-dvh lg:ml-[264px]">
+        <div className="mx-auto w-full max-w-[1180px] px-5 py-6 pb-28 lg:px-10 lg:py-10">
+          {children}
+        </div>
       </main>
       <DaylightDock />
+      <MobileTabbar avatarInitial={name.charAt(0).toUpperCase()} />
     </div>
   );
 }

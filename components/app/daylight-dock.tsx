@@ -13,12 +13,13 @@ export function DaylightDock() {
   return (
     <Link
       href="/daylight"
-      className="fixed bottom-6 right-6 z-20 flex items-center gap-3 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[var(--color-accent-subtle)] py-2.5 pl-2.5 pr-5 shadow-[var(--shadow-float)] transition-transform hover:-translate-y-0.5"
+      aria-label="Daylight — AI companion"
+      className="fixed bottom-24 right-5 z-20 flex items-center gap-3 rounded-full bg-[var(--color-accent)] p-3 text-[var(--color-accent-fg)] shadow-[var(--shadow-float)] transition-transform hover:-translate-y-0.5 lg:bottom-6 lg:right-6 lg:gap-3 lg:rounded-[var(--radius-pill)] lg:border lg:border-[var(--color-line)] lg:bg-[var(--color-accent-subtle)] lg:py-2.5 lg:pl-2.5 lg:pr-5 lg:text-[var(--color-ink)]"
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-fg)]">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full lg:bg-[var(--color-accent)] lg:text-[var(--color-accent-fg)]">
         <ChatCircleDots size={22} weight="fill" />
       </span>
-      <span className="leading-tight">
+      <span className="hidden leading-tight lg:block">
         <span className="block text-sm font-semibold text-[var(--color-ink)]">Daylight</span>
         <span className="block text-xs text-[var(--color-ink-muted)]">
           AI companion · always awake

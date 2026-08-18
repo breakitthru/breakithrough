@@ -40,7 +40,7 @@ export function DaylightChat({ history, configured }: { history: ChatMsg[]; conf
   const empty = messages.length === 0;
 
   return (
-    <div className="daylight-reveal mx-auto flex h-[calc(100dvh-5rem)] max-w-[820px] flex-col">
+    <div className="daylight-reveal mx-auto flex h-[calc(100dvh-8.5rem)] max-w-[820px] flex-col lg:h-[calc(100dvh-5rem)]">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-[var(--color-line)] pb-4">
         <Link href="/today" aria-label="Back to your dashboard" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-muted)] transition-colors hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-ink)]">
