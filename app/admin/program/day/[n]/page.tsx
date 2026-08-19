@@ -17,7 +17,7 @@ export default async function DayEditorPage({ params }: { params: Promise<{ n: s
   const day = await prisma.day.findUnique({
     where: { dayNumber },
     include: {
-      tasks: { orderBy: { order: "asc" }, include: { _count: { select: { videos: true } } } },
+      tasks: { orderBy: { order: "asc" }, include: { videos: { orderBy: { order: "asc" } } } },
       videos: { where: { taskId: null }, orderBy: { order: "asc" } },
     },
   });
@@ -48,7 +48,9 @@ export default async function DayEditorPage({ params }: { params: Promise<{ n: s
           hasVideo: t.hasVideo,
           whyItMatters: t.whyItMatters,
           steps: t.steps,
-          videoCount: t._count.videos,
+          videoCount: t.videos.length,
+          videoStreamUid: t.videos[0]?.streamUid ?? "",
+          videoTitle: t.videos[0]?.title ?? "",
         }))}
         videos={day.videos.map((v) => ({ id: v.id, title: v.title, streamUid: v.streamUid, durationSec: v.durationSec }))}
         streamConfigured={isStreamConfigured}

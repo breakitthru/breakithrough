@@ -17,6 +17,8 @@ import {
   updateDay,
   createVideo,
   deleteVideo,
+  setTaskVideo,
+  clearTaskVideo,
 } from "@/lib/admin-program-actions";
 
 const CATEGORIES = ["MENTAL", "PHYSICAL", "REFLECTION", "PRACTICE", "CONNECTION"] as const;
@@ -35,6 +37,8 @@ export type TaskRow = {
   whyItMatters: string | null;
   steps: string[];
   videoCount: number;
+  videoStreamUid: string;
+  videoTitle: string;
 };
 export type VideoRow = { id: string; title: string; streamUid: string | null; durationSec: number | null };
 
@@ -47,7 +51,10 @@ const empty = {
   mandatory: true,
   hasVideo: true,
   whyItMatters: "",
+  hasSteps: false,
   stepsText: "",
+  videoStreamUid: "",
+  videoTitle: "",
 };
 
 export function DayEditor({
@@ -101,7 +108,10 @@ export function DayEditor({
       mandatory: t.mandatory,
       hasVideo: t.hasVideo,
       whyItMatters: t.whyItMatters ?? "",
+      hasSteps: t.steps.length > 0,
       stepsText: t.steps.join("\n"),
+      videoStreamUid: t.videoStreamUid,
+      videoTitle: t.videoTitle,
     });
     setError(null);
     setTaskOpen(true);
@@ -110,13 +120,39 @@ export function DayEditor({
   const submitTask = () =>
     start(async () => {
       setError(null);
-      const { stepsText, ...rest } = form;
-      const input = { ...rest, steps: stepsText.split("\n").map((s) => s.trim()).filter(Boolean) };
-      const res = editingId ? await updateTask(editingId, input) : await createTask(dayNumber, input);
-      if (!res.ok) {
-        setError(res.error);
-        return;
+      const { stepsText, hasSteps, videoStreamUid, videoTitle, ...rest } = form;
+      const input = {
+        ...rest,
+        steps: hasSteps ? stepsText.split("\n").map((s) => s.trim()).filter(Boolean) : [],
+      };
+      let taskId: string;
+      if (editingId) {
+        const res = await updateTask(editingId, input);
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
+        taskId = editingId;
+      } else {
+        const res = await createTask(dayNumber, input);
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
+        taskId = res.taskId;
       }
+
+      // Attach or remove this task's own video to match the "Has a video" toggle.
+      if (rest.hasVideo && videoStreamUid) {
+        const vr = await setTaskVideo(taskId, { streamUid: videoStreamUid, title: videoTitle || rest.title });
+        if (!vr.ok) {
+          setError(vr.error);
+          return;
+        }
+      } else if (!rest.hasVideo) {
+        await clearTaskVideo(taskId);
+      }
+
       setTaskOpen(false);
       router.refresh();
     });
@@ -287,12 +323,31 @@ export function DayEditor({
           </div>
           <Toggle checked={form.hasVideo} onChange={(v) => setForm({ ...form, hasVideo: v })} />
         </div>
+        {form.hasVideo && (
+          <div className="mb-4 rounded-[var(--radius-md)] border border-[var(--color-line)] p-3">
+            <Field label="Task video" hint="Plays on this task's page only. Uploads straight to Cloudflare; becomes Ready after transcoding.">
+              <VideoUpload value={form.videoStreamUid} onChange={(uid) => setForm({ ...form, videoStreamUid: uid })} configured={streamConfigured} />
+            </Field>
+            <Field label="Video title (optional)" hint="Defaults to the task title.">
+              <input className={inputClass} value={form.videoTitle} onChange={(e) => setForm({ ...form, videoTitle: e.target.value })} placeholder={form.title || "Task video"} />
+            </Field>
+          </div>
+        )}
         <Field label="Why it matters (optional)">
           <textarea rows={3} className={inputClass} value={form.whyItMatters} onChange={(e) => setForm({ ...form, whyItMatters: e.target.value })} />
         </Field>
-        <Field label="Steps (optional)" hint="One step per line. Shown as a numbered list. Leave blank to hide the Steps section.">
-          <textarea rows={4} className={inputClass} value={form.stepsText} onChange={(e) => setForm({ ...form, stepsText: e.target.value })} placeholder={"Find a quiet spot.\nSet a timer for 3 minutes.\nBreathe slowly."} />
-        </Field>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <span className="text-sm text-[var(--color-ink)]">Has steps</span>
+            <p className="text-xs text-[var(--color-ink-faint)]">Off = no Steps section shown on the task.</p>
+          </div>
+          <Toggle checked={form.hasSteps} onChange={(v) => setForm({ ...form, hasSteps: v })} />
+        </div>
+        {form.hasSteps && (
+          <Field label="Steps" hint="One step per line. Shown to members as a numbered list.">
+            <textarea rows={4} className={inputClass} value={form.stepsText} onChange={(e) => setForm({ ...form, stepsText: e.target.value })} placeholder={"Find a quiet spot.\nSet a timer for 3 minutes.\nBreathe slowly."} />
+          </Field>
+        )}
         {error && <p className="text-sm text-[var(--color-crisis)]">{error}</p>}
       </Drawer>
 

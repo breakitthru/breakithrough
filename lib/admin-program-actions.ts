@@ -67,7 +67,7 @@ export type BadgeInput = {
 };
 type ActionResult = { ok: true } | { ok: false; error: string };
 
-export async function createTask(dayNumber: number, input: TaskInput): Promise<ActionResult> {
+export async function createTask(dayNumber: number, input: TaskInput): Promise<{ ok: true; taskId: string } | { ok: false; error: string }> {
   const admin = await requirePermission("program.edit");
   const parsed = taskSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid task" };
@@ -80,6 +80,52 @@ export async function createTask(dayNumber: number, input: TaskInput): Promise<A
   });
   await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "task.create", targetType: "Task", targetId: task.id, summary: `Added a task to Day ${dayNumber}`, meta: { title: parsed.data.title } });
   revalidateProgram(dayNumber);
+  return { ok: true, taskId: task.id };
+}
+
+/** Attach (or replace) the single video that plays on a specific task's page. */
+export async function setTaskVideo(
+  taskId: string,
+  input: { streamUid: string; title?: string; durationSec?: number | null },
+): Promise<ActionResult> {
+  const admin = await requirePermission("program.edit");
+  const streamUid = (input.streamUid ?? "").trim();
+  if (!streamUid) return { ok: false, error: "No video uploaded yet." };
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: { day: { select: { id: true, dayNumber: true } }, videos: true },
+  });
+  if (!task) return { ok: false, error: "Task not found" };
+  const title = (input.title || task.title).trim().slice(0, 160) || "Task video";
+  const existing = task.videos[0];
+
+  if (existing && existing.streamUid === streamUid) {
+    await prisma.video.update({ where: { id: existing.id }, data: { title, durationSec: input.durationSec ?? existing.durationSec } });
+  } else {
+    // Replace: remove old task video(s) (and their Cloudflare assets), then create.
+    for (const v of task.videos) {
+      if (v.streamUid && v.streamUid !== streamUid) await deleteStreamVideo(v.streamUid);
+    }
+    await prisma.video.deleteMany({ where: { taskId } });
+    await prisma.video.create({ data: { dayId: task.day.id, taskId, title, streamUid, durationSec: input.durationSec ?? null } });
+  }
+  await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "task.video.set", targetType: "Task", targetId: taskId, summary: `Set the video for a task on Day ${task.day.dayNumber}` });
+  revalidateProgram(task.day.dayNumber);
+  return { ok: true };
+}
+
+/** Remove the video attached to a task (used when "Has a video" is turned off). */
+export async function clearTaskVideo(taskId: string): Promise<ActionResult> {
+  const admin = await requirePermission("program.edit");
+  const task = await prisma.task.findUnique({ where: { id: taskId }, include: { videos: true, day: { select: { dayNumber: true } } } });
+  if (!task) return { ok: false, error: "Task not found" };
+  if (task.videos.length === 0) return { ok: true };
+  for (const v of task.videos) {
+    if (v.streamUid) await deleteStreamVideo(v.streamUid);
+  }
+  await prisma.video.deleteMany({ where: { taskId } });
+  await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "task.video.clear", targetType: "Task", targetId: taskId, summary: `Removed the video from a task on Day ${task.day.dayNumber}` });
+  revalidateProgram(task.day.dayNumber);
   return { ok: true };
 }
 
