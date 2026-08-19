@@ -569,8 +569,10 @@ model ShopItem {
 
 enum OrderStatus {
   PENDING // created, awaiting payment
-  PAID // paid, needs fulfilment
-  FULFILLED // shipped / done
+  PAID // paid, needs packing
+  SHIPPED // dispatched, on the way (ETA + tracking set)
+  DELIVERED // arrived
+  FULFILLED // legacy "done" marker (kept for old orders)
   CANCELLED
   FAILED
 }
@@ -590,6 +592,10 @@ model Order {
   shipPincode       String
   razorpayOrderId   String?
   razorpayPaymentId String?
+  etaAt             DateTime? // estimated delivery date, set by admin when shipping
+  trackingCarrier   String? // courier name, e.g. Delhivery
+  trackingNumber    String? // AWB / tracking id
+  trackingUrl       String? // link the member can open to track
   items             OrderItem[]
   createdAt         DateTime    @default(now())
 

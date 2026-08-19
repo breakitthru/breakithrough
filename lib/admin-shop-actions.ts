@@ -108,12 +108,53 @@ export async function deleteShopItem(id: string): Promise<Result> {
   return { ok: true };
 }
 
-export async function setOrderStatus(id: string, status: "FULFILLED" | "CANCELLED"): Promise<Result> {
+const fulfilmentSchema = z.object({
+  status: z.enum(["PAID", "SHIPPED", "DELIVERED", "CANCELLED"]),
+  etaAt: z.string().trim().optional().nullable(), // yyyy-mm-dd from a date input
+  trackingCarrier: z.string().trim().max(80).optional().nullable(),
+  trackingNumber: z.string().trim().max(120).optional().nullable(),
+  trackingUrl: z.string().trim().max(500).optional().nullable(),
+});
+
+export type OrderFulfilmentInput = {
+  status: "PAID" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+  etaAt?: string | null;
+  trackingCarrier?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+};
+
+export async function updateOrderFulfilment(id: string, input: OrderFulfilmentInput): Promise<Result> {
   const admin = await requirePermission("shop.manage");
+  const parsed = fulfilmentSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid update" };
+  const d = parsed.data;
+
   const order = await prisma.order.findUnique({ where: { id } });
   if (!order) return { ok: false, error: "Order not found" };
-  await prisma.order.update({ where: { id }, data: { status } });
-  await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "shop.order.status", targetType: "Order", targetId: id, summary: `Marked order ${status.toLowerCase()} for ${order.shipName}` });
+
+  let etaAt: Date | null = null;
+  if (d.etaAt) {
+    const parsedDate = new Date(d.etaAt);
+    if (Number.isNaN(parsedDate.getTime())) return { ok: false, error: "That delivery date isn't valid." };
+    etaAt = parsedDate;
+  }
+  if (d.trackingUrl && !/^https?:\/\//i.test(d.trackingUrl)) {
+    return { ok: false, error: "The tracking link must start with http:// or https://." };
+  }
+
+  await prisma.order.update({
+    where: { id },
+    data: {
+      status: d.status,
+      etaAt,
+      trackingCarrier: d.trackingCarrier || null,
+      trackingNumber: d.trackingNumber || null,
+      trackingUrl: d.trackingUrl || null,
+    },
+  });
+  await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "shop.order.fulfilment", targetType: "Order", targetId: id, summary: `Set order ${d.status.toLowerCase()} for ${order.shipName}`, meta: { etaAt: d.etaAt ?? null, trackingNumber: d.trackingNumber ?? null } });
   revalidatePath("/admin/shop/orders");
+  revalidatePath("/shop/orders");
   return { ok: true };
 }

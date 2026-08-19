@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Gift, Lock, CheckCircle, ShoppingBag, ShoppingCartSimple, Plus, Check } from "@phosphor-icons/react";
+import { Gift, Lock, CheckCircle, ShoppingBag, ShoppingCartSimple, Plus, Check, Package } from "@phosphor-icons/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RedeemButton } from "@/components/app/redeem-button";
@@ -48,15 +48,23 @@ export function ShopTabs({
           <p className="eyebrow text-[var(--color-accent)]">{balance} points to spend</p>
           <h1 className="font-display mt-1 text-[2.75rem] leading-tight text-[var(--color-ink)]">The shop.</h1>
         </div>
-        <Link
-          href="/shop/cart"
-          className="relative flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-line-strong)] px-4 py-2 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
-        >
-          <ShoppingCartSimple size={18} /> Cart
-          {count > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-accent)] px-1.5 text-xs font-semibold text-[var(--color-accent-fg)]">{count}</span>
-          )}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/shop/orders"
+            className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-line-strong)] px-4 py-2 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+          >
+            <Package size={18} /> Orders
+          </Link>
+          <Link
+            href="/shop/cart"
+            className="relative flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-line-strong)] px-4 py-2 text-sm text-[var(--color-ink)] hover:bg-[var(--color-surface)]"
+          >
+            <ShoppingCartSimple size={18} /> Cart
+            {count > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-accent)] px-1.5 text-xs font-semibold text-[var(--color-accent-fg)]">{count}</span>
+            )}
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}
