@@ -33,6 +33,7 @@ export type TaskRow = {
   mandatory: boolean;
   hasVideo: boolean;
   whyItMatters: string | null;
+  steps: string[];
   videoCount: number;
 };
 export type VideoRow = { id: string; title: string; streamUid: string | null; durationSec: number | null };
@@ -46,6 +47,7 @@ const empty = {
   mandatory: true,
   hasVideo: true,
   whyItMatters: "",
+  stepsText: "",
 };
 
 export function DayEditor({
@@ -99,6 +101,7 @@ export function DayEditor({
       mandatory: t.mandatory,
       hasVideo: t.hasVideo,
       whyItMatters: t.whyItMatters ?? "",
+      stepsText: t.steps.join("\n"),
     });
     setError(null);
     setTaskOpen(true);
@@ -107,7 +110,9 @@ export function DayEditor({
   const submitTask = () =>
     start(async () => {
       setError(null);
-      const res = editingId ? await updateTask(editingId, form) : await createTask(dayNumber, form);
+      const { stepsText, ...rest } = form;
+      const input = { ...rest, steps: stepsText.split("\n").map((s) => s.trim()).filter(Boolean) };
+      const res = editingId ? await updateTask(editingId, input) : await createTask(dayNumber, input);
       if (!res.ok) {
         setError(res.error);
         return;
@@ -284,6 +289,9 @@ export function DayEditor({
         </div>
         <Field label="Why it matters (optional)">
           <textarea rows={3} className={inputClass} value={form.whyItMatters} onChange={(e) => setForm({ ...form, whyItMatters: e.target.value })} />
+        </Field>
+        <Field label="Steps (optional)" hint="One step per line. Shown as a numbered list. Leave blank to hide the Steps section.">
+          <textarea rows={4} className={inputClass} value={form.stepsText} onChange={(e) => setForm({ ...form, stepsText: e.target.value })} placeholder={"Find a quiet spot.\nSet a timer for 3 minutes.\nBreathe slowly."} />
         </Field>
         {error && <p className="text-sm text-[var(--color-crisis)]">{error}</p>}
       </Drawer>

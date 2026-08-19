@@ -199,6 +199,7 @@ model Task {
   title            String
   category         TaskCategory @default(PRACTICE)
   whyItMatters     String? // one short paragraph from the clinician
+  steps            String[]     @default([]) // ordered how-to steps shown on the task
   estimatedMinutes Int          @default(5)
   points           Int          @default(1) // per-task, configurable
   mandatory        Boolean      @default(true)

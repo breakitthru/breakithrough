@@ -34,6 +34,7 @@ const taskSchema = z.object({
   mandatory: z.coerce.boolean(),
   hasVideo: z.coerce.boolean(),
   whyItMatters: z.string().trim().max(1000).optional().nullable(),
+  steps: z.array(z.string().trim().min(1).max(300)).max(20).optional().default([]),
 });
 
 // Loose input shapes (the client holds plain strings/numbers; schemas validate at runtime).
@@ -46,6 +47,7 @@ export type TaskInput = {
   mandatory: boolean;
   hasVideo: boolean;
   whyItMatters?: string | null;
+  steps?: string[];
 };
 export type VideoInput = {
   title: string;

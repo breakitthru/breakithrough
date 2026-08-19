@@ -47,6 +47,7 @@ export default async function DayEditorPage({ params }: { params: Promise<{ n: s
           mandatory: t.mandatory,
           hasVideo: t.hasVideo,
           whyItMatters: t.whyItMatters,
+          steps: t.steps,
           videoCount: t._count.videos,
         }))}
         videos={day.videos.map((v) => ({ id: v.id, title: v.title, streamUid: v.streamUid, durationSec: v.durationSec }))}

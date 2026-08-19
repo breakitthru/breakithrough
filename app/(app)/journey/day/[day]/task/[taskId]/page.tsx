@@ -83,11 +83,16 @@ export default async function TaskPage({
             {task.whyItMatters ?? "The clinician's note for this task goes here."}
           </p>
 
-          <h2 className="mt-6 text-base font-semibold text-[var(--color-ink)]">Steps</h2>
-          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[var(--color-ink-muted)]">
-            <li>Placeholder step one.</li>
-            <li>Placeholder step two.</li>
-          </ol>
+          {task.steps.length > 0 && (
+            <>
+              <h2 className="mt-6 text-base font-semibold text-[var(--color-ink)]">Steps</h2>
+              <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[var(--color-ink-muted)]">
+                {task.steps.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+            </>
+          )}
         </div>
       </div>
 
