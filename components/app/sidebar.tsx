@@ -43,8 +43,13 @@ export function Sidebar({
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col bg-[var(--color-brand-ink)] px-4 py-6 text-[var(--color-brand-fg)] lg:flex">
-      {/* Logo */}
-      <div className="mx-1 mb-8 flex items-center justify-center">
+      {/* Logo — back to the dashboard */}
+      <Link
+        href="/today"
+        onClick={() => setPending("/today")}
+        aria-label="Break It Thru — go to your dashboard"
+        className="mx-1 mb-8 flex items-center justify-center rounded-[var(--radius-md)] transition-opacity hover:opacity-90"
+      >
         <BrandLogo
           logoUrl={logoUrl}
           logoSize={logoSize}
@@ -56,7 +61,7 @@ export function Sidebar({
             </>
           }
         />
-      </div>
+      </Link>
 
       {/* Primary nav */}
       <nav className="flex flex-col gap-1">
