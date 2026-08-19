@@ -558,6 +558,7 @@ model ShopItem {
   hasSizes     Boolean     @default(false) // when true, buyers must pick a size
   sizes        String[]    @default([]) // e.g. ["S", "M", "L", "XL"]
   sizeChartUrl String?     @db.Text // data URL of a size chart image, optional
+  sizeStock    Json? // per-size stock map { "S": 5, "M": 0 } for sized items; null = untracked
   active       Boolean     @default(true)
   featured     Boolean     @default(false)
   stock        Int? // null = unlimited
@@ -582,7 +583,9 @@ model Order {
   userId            String
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   status            OrderStatus @default(PENDING)
-  totalInr          Int
+  totalInr          Int // grand total charged (subtotal + shipping)
+  shippingInr       Int         @default(0) // delivery fee charged, snapshot
+  refundedAt        DateTime? // set when a Razorpay refund was issued on cancel
   shipName          String
   shipPhone         String
   shipLine1         String

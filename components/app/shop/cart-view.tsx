@@ -32,7 +32,13 @@ function loadCheckout(): Promise<boolean> {
 const empty = { name: "", phone: "", line1: "", line2: "", city: "", state: "", pincode: "" };
 const field = "h-11 w-full rounded-[var(--radius-md)] border border-[var(--color-line-strong)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]";
 
-export function CartView() {
+export function CartView({
+  shippingFeeInr = 0,
+  freeShippingThresholdInr = 0,
+}: {
+  shippingFeeInr?: number;
+  freeShippingThresholdInr?: number;
+}) {
   const router = useRouter();
   const [cart, setCart] = useState<CartEntry[]>([]);
   const [addr, setAddr] = useState({ ...empty });
@@ -46,7 +52,10 @@ export function CartView() {
     return () => window.removeEventListener(CART_EVENT, sync);
   }, []);
 
-  const total = cart.reduce((sum, c) => sum + c.priceInr * c.quantity, 0);
+  const subtotal = cart.reduce((sum, c) => sum + c.priceInr * c.quantity, 0);
+  const freeShip = freeShippingThresholdInr > 0 && subtotal >= freeShippingThresholdInr;
+  const shipping = freeShip ? 0 : Math.max(0, shippingFeeInr);
+  const total = subtotal + shipping;
 
   const pay = async () => {
     setBusy(true);
@@ -139,10 +148,25 @@ export function CartView() {
         <input className={field} placeholder="PIN code" value={addr.pincode} onChange={(e) => setAddr({ ...addr, pincode: e.target.value })} />
       </div>
 
-      {/* Total + pay */}
-      <div className="mt-8 flex items-center justify-between border-t border-[var(--color-line)] pt-5">
-        <span className="text-sm text-[var(--color-ink-muted)]">Total</span>
-        <span className="font-display text-2xl text-[var(--color-ink)]">₹{total}</span>
+      {/* Totals + pay */}
+      <div className="mt-8 space-y-2 border-t border-[var(--color-line)] pt-5">
+        <div className="flex items-center justify-between text-sm text-[var(--color-ink-muted)]">
+          <span>Subtotal</span>
+          <span>₹{subtotal}</span>
+        </div>
+        <div className="flex items-center justify-between text-sm text-[var(--color-ink-muted)]">
+          <span>Shipping</span>
+          <span>{shipping === 0 ? (freeShip ? "Free" : "Free") : `₹${shipping}`}</span>
+        </div>
+        {freeShippingThresholdInr > 0 && !freeShip && (
+          <p className="text-xs text-[var(--color-ink-faint)]">
+            Add ₹{freeShippingThresholdInr - subtotal} more for free shipping.
+          </p>
+        )}
+        <div className="flex items-center justify-between border-t border-[var(--color-line)] pt-2">
+          <span className="text-sm font-medium text-[var(--color-ink)]">Total</span>
+          <span className="font-display text-2xl text-[var(--color-ink)]">₹{total}</span>
+        </div>
       </div>
       {error && <p className="mt-3 text-sm text-[var(--color-crisis)]">{error}</p>}
       <div className="mt-4 flex justify-end">

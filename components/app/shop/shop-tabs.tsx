@@ -9,7 +9,7 @@ import { RedeemButton } from "@/components/app/redeem-button";
 import { addToCart, getCart, cartCount, CART_EVENT } from "@/components/app/shop/cart";
 
 export type RewardCard = { id: string; title: string; description: string | null; pointsCost: number; featured: boolean };
-export type StoreItem = { id: string; title: string; description: string | null; priceInr: number; imageUrl: string | null; stock: number | null; featured: boolean; hasSizes: boolean };
+export type StoreItem = { id: string; title: string; description: string | null; priceInr: number; imageUrl: string | null; stock: number | null; featured: boolean; hasSizes: boolean; soldOut: boolean };
 
 export function ShopTabs({
   balance,
@@ -89,7 +89,7 @@ export function ShopTabs({
         ) : (
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {items.map((item) => {
-              const out = item.stock !== null && item.stock <= 0;
+              const out = item.soldOut;
               return (
                 <Link key={item.id} href={`/shop/item/${item.id}`} className="group block">
                   <Card className={`flex h-full flex-col overflow-hidden p-0 transition-colors group-hover:border-[var(--color-line-strong)] ${out ? "opacity-60" : ""}`}>

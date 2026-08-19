@@ -234,6 +234,88 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
       },
     ],
   },
+  shipping: {
+    slug: "shipping",
+    key: "shipping",
+    title: "Shipping Policy",
+    updated: "2026",
+    intro: `This policy explains how physical items bought from the ${OPERATOR} shop are delivered within India.`,
+    sections: [
+      {
+        heading: "1. Where we ship",
+        body: [
+          "We currently ship to addresses within India only. Please enter a complete, accurate delivery address and a reachable phone number at checkout — we are not responsible for delays or non-delivery caused by an incorrect address.",
+        ],
+      },
+      {
+        heading: "2. Processing time",
+        body: [
+          "Orders are usually packed and dispatched within 2 to 4 business days of a successful payment. You will receive an email confirmation when you order, and a second email with courier and tracking details once your order ships.",
+        ],
+      },
+      {
+        heading: "3. Delivery time",
+        body: [
+          "Once dispatched, delivery typically takes 4 to 8 business days depending on your location and the courier. An estimated delivery date is shown under Shop → Orders in the app once your order ships. These are estimates, not guarantees.",
+        ],
+      },
+      {
+        heading: "4. Shipping charges",
+        body: [
+          "Any delivery charge is shown clearly at checkout before you pay. Where a free-shipping threshold applies, it is shown in your cart.",
+        ],
+      },
+      {
+        heading: "5. Tracking your order",
+        body: [
+          "You can track every order under Shop → Orders in the app. When we ship, we include a tracking number and, where available, a tracking link from the courier.",
+        ],
+      },
+      {
+        heading: "6. Delays and issues",
+        body: [
+          `Couriers occasionally face delays outside our control (weather, regional disruptions, peak load). If your order is significantly late or arrives damaged, write to ${SUPPORT} with your order number and we will help.`,
+        ],
+      },
+    ],
+  },
+  cancellation: {
+    slug: "cancellation",
+    key: "cancellation",
+    title: "Cancellation Policy",
+    updated: "2026",
+    intro: `This policy explains cancellations for physical orders placed in the ${OPERATOR} shop. (The 60-day programme is a one-time purchase — see the Refund Policy.)`,
+    sections: [
+      {
+        heading: "1. Cancelling before dispatch",
+        body: [
+          `You can request to cancel an order any time before it is dispatched by emailing ${SUPPORT} with your order number. If the order has not yet shipped, we will cancel it and refund the full amount to your original payment method.`,
+        ],
+      },
+      {
+        heading: "2. After dispatch",
+        body: [
+          "Once an order has shipped it can no longer be cancelled. If you no longer want it, please refer to our return process below after it arrives.",
+        ],
+      },
+      {
+        heading: "3. Refunds on cancellation",
+        body: [
+          "Approved cancellation refunds are returned to your original payment method through our payment gateway. Depending on your bank, it may take 5 to 10 business days to appear.",
+        ],
+      },
+      {
+        heading: "4. Damaged or wrong items",
+        body: [
+          `If an item arrives damaged, defective, or is not what you ordered, contact ${SUPPORT} within 7 days of delivery with your order number and a photo. We will arrange a replacement or refund.`,
+        ],
+      },
+      {
+        heading: "5. Contact",
+        body: [`For any cancellation or return question, write to ${SUPPORT}.`],
+      },
+    ],
+  },
 };
 
 export const SUPPORT_EMAIL = SUPPORT;

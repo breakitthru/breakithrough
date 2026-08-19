@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature } from "@/lib/razorpay";
-import { notifyOrderPlaced } from "@/lib/order-notify";
+import { confirmOrderPaid } from "@/lib/shop-fulfilment";
 
 /*
   Razorpay webhook. The reliable source of truth for payment state: it fires even
@@ -64,16 +64,11 @@ export async function POST(req: Request) {
   }
 
   // Shop order (Order table)
-  const order = await prisma.order.findFirst({ where: { razorpayOrderId: orderId }, include: { items: true } });
+  const order = await prisma.order.findFirst({ where: { razorpayOrderId: orderId } });
   if (order) {
-    if (event.event === "payment.captured" && order.status !== "PAID" && order.status !== "FULFILLED") {
-      await prisma.$transaction([
-        prisma.order.update({ where: { id: order.id }, data: { status: "PAID", razorpayPaymentId: paymentId ?? order.razorpayPaymentId } }),
-        ...order.items
-          .filter((i) => i.shopItemId)
-          .map((i) => prisma.shopItem.updateMany({ where: { id: i.shopItemId!, stock: { not: null } }, data: { stock: { decrement: i.quantity } } })),
-      ]);
-      await notifyOrderPlaced(order.id);
+    if (event.event === "payment.captured") {
+      // Idempotent single-winner claim + stock decrement + emails.
+      await confirmOrderPaid(order.id, paymentId ?? order.razorpayPaymentId);
     } else if (event.event === "payment.failed" && order.status === "PENDING") {
       await prisma.order.update({ where: { id: order.id }, data: { status: "FAILED", razorpayPaymentId: paymentId ?? order.razorpayPaymentId } });
     }

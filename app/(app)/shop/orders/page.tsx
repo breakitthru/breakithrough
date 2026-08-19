@@ -137,13 +137,18 @@ export default async function ShopOrdersPage() {
                           </p>
                         )}
                       </div>
-                      {o.trackingUrl && (
-                        <a href={o.trackingUrl} target="_blank" rel="noopener noreferrer">
-                          <Button variant="outline" size="sm">
-                            Track <ArrowSquareOut size={15} />
-                          </Button>
-                        </a>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <Link href={`/shop/orders/${o.id}/invoice`}>
+                          <Button variant="outline" size="sm">Invoice</Button>
+                        </Link>
+                        {o.trackingUrl && (
+                          <a href={o.trackingUrl} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" size="sm">
+                              Track <ArrowSquareOut size={15} />
+                            </Button>
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}

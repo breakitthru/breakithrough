@@ -18,6 +18,10 @@ const schema = z.object({
   AI_PROVIDER: z.string().default("openai"),
   AI_API_KEY: z.string().default(""),
   AI_MODEL: z.string().default("gpt-4o-mini"),
+  // Gmail SMTP for transactional email. SMTP_USER is the Gmail address and
+  // SMTP_PASS is a Google App Password (needs 2FA on the account).
+  SMTP_USER: z.string().default(""),
+  SMTP_PASS: z.string().default(""),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -53,6 +57,8 @@ export const env = parsed.success
       AI_PROVIDER: process.env.AI_PROVIDER ?? "openai",
       AI_API_KEY: process.env.AI_API_KEY ?? "",
       AI_MODEL: process.env.AI_MODEL ?? "gpt-4o-mini",
+      SMTP_USER: process.env.SMTP_USER ?? "",
+      SMTP_PASS: process.env.SMTP_PASS ?? "",
       NODE_ENV:
         (process.env.NODE_ENV as "development" | "test" | "production") ?? "production",
     };

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireOnboardedUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { sizeStockMap } from "@/lib/shop-inventory";
 import { ItemDetail } from "@/components/app/shop/item-detail";
 
 export default async function ShopItemPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +22,7 @@ export default async function ShopItemPage({ params }: { params: Promise<{ id: s
         sizes: item.sizes,
         sizeChartUrl: item.sizeChartUrl,
         stock: item.stock,
+        sizeStock: sizeStockMap(item),
       }}
     />
   );

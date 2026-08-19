@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/admin";
 import { logAudit } from "@/lib/audit";
+import { refundRazorpayPayment, isRazorpayConfigured } from "@/lib/razorpay";
+import { restockOrder } from "@/lib/shop-fulfilment";
+import { notifyOrderShipped } from "@/lib/order-notify";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -18,6 +21,7 @@ const itemSchema = z.object({
   hasSizes: z.coerce.boolean(),
   sizes: z.array(z.string().trim().min(1).max(40)).max(30).optional().default([]),
   sizeChartUrl: z.string().optional().nullable(),
+  sizeStock: z.record(z.string(), z.coerce.number().int().min(0).max(1_000_000)).nullable().optional(),
   stock: z.union([z.coerce.number().int().min(0).max(1_000_000), z.null()]).optional(),
   active: z.coerce.boolean(),
   featured: z.coerce.boolean(),
@@ -32,6 +36,7 @@ export type ShopItemInput = {
   hasSizes: boolean;
   sizes?: string[];
   sizeChartUrl?: string | null;
+  sizeStock?: Record<string, number> | null;
   stock?: number | string | null;
   active: boolean;
   featured: boolean;
@@ -61,7 +66,9 @@ function buildData(d: ItemData): { ok: true; data: Record<string, unknown> } | {
       hasSizes: d.hasSizes,
       sizes: d.hasSizes ? (d.sizes ?? []) : [],
       sizeChartUrl: d.hasSizes ? chart : null,
-      stock: d.stock === undefined ? null : d.stock,
+      // Sized items track stock per size; simple items use the integer stock.
+      sizeStock: d.hasSizes ? (d.sizeStock && Object.keys(d.sizeStock).length > 0 ? d.sizeStock : null) : null,
+      stock: d.hasSizes ? null : d.stock === undefined ? null : d.stock,
       active: d.active,
       featured: d.featured,
       order: d.order,
@@ -143,6 +150,24 @@ export async function updateOrderFulfilment(id: string, input: OrderFulfilmentIn
     return { ok: false, error: "The tracking link must start with http:// or https://." };
   }
 
+  const wasPaid = ["PAID", "SHIPPED", "DELIVERED"].includes(order.status);
+  const nowCancelling = d.status === "CANCELLED" && order.status !== "CANCELLED";
+  const nowShipping = d.status === "SHIPPED" && order.status !== "SHIPPED";
+
+  // Cancelling a paid order: refund at Razorpay (once) and put stock back.
+  let refundedAt: Date | null = order.refundedAt;
+  if (nowCancelling && wasPaid && !order.refundedAt) {
+    if (order.razorpayPaymentId && isRazorpayConfigured) {
+      try {
+        await refundRazorpayPayment(order.razorpayPaymentId, order.totalInr * 100);
+        refundedAt = new Date();
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? `Refund failed: ${e.message}` : "Refund failed at Razorpay." };
+      }
+    }
+    await restockOrder(order.id);
+  }
+
   await prisma.order.update({
     where: { id },
     data: {
@@ -151,9 +176,14 @@ export async function updateOrderFulfilment(id: string, input: OrderFulfilmentIn
       trackingCarrier: d.trackingCarrier || null,
       trackingNumber: d.trackingNumber || null,
       trackingUrl: d.trackingUrl || null,
+      refundedAt,
     },
   });
-  await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "shop.order.fulfilment", targetType: "Order", targetId: id, summary: `Set order ${d.status.toLowerCase()} for ${order.shipName}`, meta: { etaAt: d.etaAt ?? null, trackingNumber: d.trackingNumber ?? null } });
+
+  // Tell the customer once it's on the way.
+  if (nowShipping) await notifyOrderShipped(order.id);
+
+  await logAudit({ actorId: admin.id, actorEmail: admin.email, action: "shop.order.fulfilment", targetType: "Order", targetId: id, summary: `Set order ${d.status.toLowerCase()} for ${order.shipName}`, meta: { etaAt: d.etaAt ?? null, trackingNumber: d.trackingNumber ?? null, refunded: Boolean(refundedAt && !order.refundedAt) } });
   revalidatePath("/admin/shop/orders");
   revalidatePath("/shop/orders");
   return { ok: true };

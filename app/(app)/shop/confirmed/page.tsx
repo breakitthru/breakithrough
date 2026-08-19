@@ -13,11 +13,12 @@ export default async function ShopConfirmedPage() {
       <p className="eyebrow mt-6">Order placed</p>
       <h1 className="font-display mt-2 text-[2.75rem] leading-tight text-[var(--color-ink)]">Thank you.</h1>
       <p className="mt-3 text-[var(--color-ink-muted)]">
-        Your order is confirmed and on its way to being packed. We&rsquo;ll reach out with any updates.
+        Your order is confirmed and on its way to being packed. We&rsquo;ve emailed your confirmation, and
+        you can follow its progress any time under your orders.
       </p>
-      <div className="mt-8 flex gap-3">
-        <Link href="/shop"><Button variant="primary" size="lg">Back to shop</Button></Link>
-        <Link href="/today"><Button variant="outline" size="lg">Back to Today</Button></Link>
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <Link href="/shop/orders"><Button variant="primary" size="lg">Track your order</Button></Link>
+        <Link href="/shop"><Button variant="outline" size="lg">Back to shop</Button></Link>
       </div>
     </div>
   );

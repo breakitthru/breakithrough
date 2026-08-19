@@ -22,6 +22,15 @@ export const CONFIG_DEFAULTS = {
   dayRolloverHour: 0, // midnight; day boundary in IST
   timezone: "Asia/Kolkata",
   currency: "INR",
+  // Shop shipping (physical goods)
+  shippingFeeInr: 0, // flat delivery fee added at checkout; 0 = free shipping
+  freeShippingThresholdInr: 0, // subtotal at/above which shipping is waived; 0 = no threshold
+  // GST / tax invoice (physical goods). Prices are treated as GST-inclusive.
+  // GST is shown on invoices when gstRatePct > 0 and a GSTIN is set.
+  gstin: "" as string, // the business GSTIN printed on invoices
+  gstRatePct: 0 as number, // GST rate used to back-out tax from the inclusive price (e.g. 5, 12, 18)
+  businessName: "Break It Thru" as string, // seller name on invoices
+  businessAddress: "" as string, // seller address block on invoices
 } as const;
 
 export type AppConfig = typeof CONFIG_DEFAULTS;

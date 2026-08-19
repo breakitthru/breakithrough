@@ -1,5 +1,6 @@
 import { requirePermission } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { sizeStockMap } from "@/lib/shop-inventory";
 import { PageHeader } from "@/components/admin/ui";
 import { ShopManager } from "@/components/admin/shop/shop-manager";
 
@@ -20,6 +21,7 @@ export default async function AdminShopPage() {
           hasSizes: r.hasSizes,
           sizes: r.sizes,
           sizeChartUrl: r.sizeChartUrl,
+          sizeStock: sizeStockMap(r),
           stock: r.stock,
           active: r.active,
           featured: r.featured,

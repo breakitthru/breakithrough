@@ -17,6 +17,7 @@ export type ShopItemDetail = {
   sizes: string[];
   sizeChartUrl: string | null;
   stock: number | null;
+  sizeStock: Record<string, number> | null; // per-size counts for sized items; null = untracked
 };
 
 export function ItemDetail({ item }: { item: ShopItemDetail }) {
@@ -26,12 +27,25 @@ export function ItemDetail({ item }: { item: ShopItemDetail }) {
   const [chart, setChart] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const out = item.stock !== null && item.stock <= 0;
-  const lowStock = item.stock !== null && item.stock > 0 && item.stock <= 5;
-  const maxQty = item.stock !== null ? Math.min(item.stock, 20) : 20;
+  // Per-size stock when tracked; otherwise fall back to the item's integer stock.
+  const stockForSize = (s: string | null): number | null => {
+    if (!item.hasSizes) return item.stock;
+    if (!item.sizeStock) return null; // untracked
+    if (!s) return null;
+    return item.sizeStock[s] ?? 0;
+  };
+  const current = stockForSize(size);
+  const out =
+    item.hasSizes && item.sizeStock
+      ? item.sizes.every((s) => (item.sizeStock?.[s] ?? 0) <= 0)
+      : item.stock !== null && item.stock <= 0;
+  const sizeOut = item.hasSizes && item.sizeStock && size ? (item.sizeStock[size] ?? 0) <= 0 : false;
+  const lowStock = current !== null && current > 0 && current <= 5;
+  const maxQty = current !== null ? Math.min(Math.max(current, 1), 20) : 20;
 
   const add = () => {
     if (item.hasSizes && !size) { setError("Please choose a size first."); return; }
+    if (sizeOut) { setError("That size is sold out."); return; }
     setError(null);
     addToCart({ id: item.id, size, title: item.title, priceInr: item.priceInr, imageUrl: item.imageUrl }, qty);
     setAdded(true);
@@ -65,8 +79,10 @@ export function ItemDetail({ item }: { item: ShopItemDetail }) {
             <span className="font-display text-[1.75rem] text-[var(--color-ink)]">₹{item.priceInr}</span>
             {out ? (
               <Chip tone="neutral">Out of stock</Chip>
+            ) : sizeOut ? (
+              <Chip tone="neutral">This size is sold out</Chip>
             ) : lowStock ? (
-              <Chip tone="caution">Only {item.stock} left</Chip>
+              <Chip tone="caution">Only {current} left</Chip>
             ) : (
               <Chip tone="success">In stock</Chip>
             )}
@@ -92,19 +108,25 @@ export function ItemDetail({ item }: { item: ShopItemDetail }) {
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {item.sizes.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setSize(s); setError(null); }}
-                    className={`flex h-11 min-w-11 items-center justify-center rounded-[var(--radius-md)] border px-3.5 text-sm transition-colors ${
-                      size === s
-                        ? "border-[var(--color-accent)] bg-[var(--color-accent-subtle)] font-medium text-[var(--color-ink)]"
-                        : "border-[var(--color-line-strong)] text-[var(--color-ink-muted)] hover:border-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {item.sizes.map((s) => {
+                  const soldOut = item.sizeStock ? (item.sizeStock[s] ?? 0) <= 0 : false;
+                  return (
+                    <button
+                      key={s}
+                      disabled={soldOut}
+                      onClick={() => { setSize(s); setQty(1); setError(null); }}
+                      className={`flex h-11 min-w-11 items-center justify-center rounded-[var(--radius-md)] border px-3.5 text-sm transition-colors ${
+                        soldOut
+                          ? "cursor-not-allowed border-[var(--color-line)] text-[var(--color-ink-faint)] line-through"
+                          : size === s
+                            ? "border-[var(--color-accent)] bg-[var(--color-accent-subtle)] font-medium text-[var(--color-ink)]"
+                            : "border-[var(--color-line-strong)] text-[var(--color-ink-muted)] hover:border-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -19,6 +19,7 @@ export type ShopItemRow = {
   hasSizes: boolean;
   sizes: string[];
   sizeChartUrl: string | null;
+  sizeStock: Record<string, number> | null;
   stock: number | null;
   active: boolean;
   featured: boolean;
@@ -26,7 +27,7 @@ export type ShopItemRow = {
 };
 
 const MAX_BYTES = 500 * 1024;
-const empty = { title: "", description: "", priceInr: 0, imageUrl: "", hasSizes: false, sizesText: "", sizeChartUrl: "", stock: "", active: true, featured: false, order: 0 };
+const empty = { title: "", description: "", priceInr: 0, imageUrl: "", hasSizes: false, sizesText: "", sizeChartUrl: "", sizeStock: {} as Record<string, string>, stock: "", active: true, featured: false, order: 0 };
 type Form = typeof empty;
 
 export function ShopManager({ items }: { items: ShopItemRow[] }) {
@@ -50,6 +51,9 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
       hasSizes: it.hasSizes,
       sizesText: it.sizes.join(", "),
       sizeChartUrl: it.sizeChartUrl ?? "",
+      sizeStock: it.sizeStock
+        ? Object.fromEntries(Object.entries(it.sizeStock).map(([k, v]) => [k, String(v)]))
+        : {},
       stock: it.stock === null ? "" : String(it.stock),
       active: it.active,
       featured: it.featured,
@@ -73,14 +77,24 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
   const submit = () =>
     start(async () => {
       setError(null);
+      const sizeList = form.sizesText.split(",").map((s) => s.trim()).filter(Boolean);
+      // Build the per-size stock map from the inputs, keeping only entered numbers.
+      let sizeStock: Record<string, number> | null = null;
+      if (form.hasSizes) {
+        const entries = sizeList
+          .filter((s) => form.sizeStock[s] !== undefined && form.sizeStock[s] !== "")
+          .map((s) => [s, Number(form.sizeStock[s])] as const);
+        sizeStock = entries.length > 0 ? Object.fromEntries(entries) : null;
+      }
       const payload: ShopItemInput = {
         title: form.title,
         description: form.description,
         priceInr: form.priceInr,
         imageUrl: form.imageUrl || null,
         hasSizes: form.hasSizes,
-        sizes: form.sizesText.split(",").map((s) => s.trim()).filter(Boolean),
+        sizes: sizeList,
         sizeChartUrl: form.sizeChartUrl || null,
+        sizeStock,
         stock: form.stock === "" ? null : Number(form.stock),
         active: form.active,
         featured: form.featured,
@@ -129,7 +143,15 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
                     </div>
                   </td>
                   <td className="px-3 py-3 text-[var(--color-ink-muted)]">₹{it.priceInr}</td>
-                  <td className="px-3 py-3 text-[var(--color-ink-muted)]">{it.stock === null ? "∞" : it.stock}</td>
+                  <td className="px-3 py-3 text-[var(--color-ink-muted)]">
+                    {it.hasSizes
+                      ? it.sizeStock
+                        ? Object.values(it.sizeStock).reduce((a, b) => a + b, 0)
+                        : "∞"
+                      : it.stock === null
+                        ? "∞"
+                        : it.stock}
+                  </td>
                   <td className="px-3 py-3">
                     <Chip tone={it.active ? "success" : "neutral"} className="uppercase tracking-wide">{it.active ? "Live" : "Hidden"}</Chip>
                   </td>
@@ -182,9 +204,11 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
             </div>
           </div>
         </Field>
-        <Field label="Stock" hint="Leave blank for unlimited.">
-          <input type="number" min={0} className={inputClass} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
-        </Field>
+        {!form.hasSizes && (
+          <Field label="Stock" hint="Leave blank for unlimited.">
+            <input type="number" min={0} className={inputClass} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+          </Field>
+        )}
         <Field label="Display order" hint="Lower shows first.">
           <input type="number" min={0} className={inputClass} value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} />
         </Field>
@@ -199,6 +223,24 @@ export function ShopManager({ items }: { items: ShopItemRow[] }) {
             <Field label="Sizes" hint="Comma separated, e.g. S, M, L, XL. Buyers must pick one.">
               <input className={inputClass} placeholder="S, M, L, XL" value={form.sizesText} onChange={(e) => setForm({ ...form, sizesText: e.target.value })} />
             </Field>
+            {form.sizesText.split(",").map((s) => s.trim()).filter(Boolean).length > 0 && (
+              <Field label="Stock per size" hint="Units available for each size. Leave all blank for unlimited.">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {form.sizesText.split(",").map((s) => s.trim()).filter(Boolean).map((s) => (
+                    <label key={s} className="flex items-center gap-2">
+                      <span className="w-10 shrink-0 text-sm text-[var(--color-ink-muted)]">{s}</span>
+                      <input
+                        type="number"
+                        min={0}
+                        className={inputClass}
+                        value={form.sizeStock[s] ?? ""}
+                        onChange={(e) => setForm({ ...form, sizeStock: { ...form.sizeStock, [s]: e.target.value } })}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </Field>
+            )}
             <Field label="Size chart image" hint="Optional. Shown to buyers on the item page. Up to 500 KB.">
               <div className="flex flex-col gap-2">
                 {form.sizeChartUrl && (

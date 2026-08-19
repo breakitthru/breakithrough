@@ -53,6 +53,10 @@ export function SiteFooter() {
             <span className="text-white/20">|</span>
             <Link href="/legal/refund" className={LINK}>Refund Policy</Link>
             <span className="text-white/20">|</span>
+            <Link href="/legal/shipping" className={LINK}>Shipping</Link>
+            <span className="text-white/20">|</span>
+            <Link href="/legal/cancellation" className={LINK}>Cancellation</Link>
+            <span className="text-white/20">|</span>
             <Link href="/support" className={LINK}>Support</Link>
             <span className="text-white/20">|</span>
             <CookiePreferencesLink className={LINK} />

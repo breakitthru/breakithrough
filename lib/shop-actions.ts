@@ -4,7 +4,9 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { createRazorpayOrder, verifyCheckoutSignature, isRazorpayConfigured, razorpayKeyId } from "@/lib/razorpay";
-import { notifyOrderPlaced } from "@/lib/order-notify";
+import { getConfig } from "@/lib/config";
+import { availableStock } from "@/lib/shop-inventory";
+import { confirmOrderPaid } from "@/lib/shop-fulfilment";
 
 /*
   Shop checkout (money items, paid via Razorpay). Prices are always taken from the
@@ -49,22 +51,34 @@ export async function createShopOrder(input: { items: CartLine[]; address: ShopA
   for (const line of items.data) {
     const p = byId.get(line.shopItemId);
     if (!p) return { ok: false, error: "One of the items is no longer available." };
-    if (p.stock !== null && p.stock < line.quantity) return { ok: false, error: `"${p.title}" is out of stock.` };
     let size: string | null = null;
     if (p.hasSizes) {
       if (!line.size || !p.sizes.includes(line.size)) return { ok: false, error: `Please choose a valid size for "${p.title}".` };
       size = line.size;
     }
+    const avail = availableStock(p, size);
+    if (avail !== null && avail < line.quantity) {
+      return { ok: false, error: `"${p.title}"${size ? ` (${size})` : ""} is out of stock.` };
+    }
     lines.push({ shopItemId: p.id, title: p.title, priceInr: p.priceInr, size, quantity: line.quantity });
   }
-  const totalInr = lines.reduce((sum, l) => sum + l.priceInr * l.quantity, 0);
-  if (totalInr <= 0) return { ok: false, error: "Nothing to pay for." };
+  const subtotalInr = lines.reduce((sum, l) => sum + l.priceInr * l.quantity, 0);
+  if (subtotalInr <= 0) return { ok: false, error: "Nothing to pay for." };
+
+  // Delivery fee, waived above the free-shipping threshold (0 = no threshold).
+  const config = await getConfig();
+  const shippingInr =
+    config.freeShippingThresholdInr > 0 && subtotalInr >= config.freeShippingThresholdInr
+      ? 0
+      : Math.max(0, config.shippingFeeInr);
+  const totalInr = subtotalInr + shippingInr;
 
   const order = await prisma.order.create({
     data: {
       userId: user.id,
       status: "PENDING",
       totalInr,
+      shippingInr,
       shipName: address.data.name,
       shipPhone: address.data.phone,
       shipLine1: address.data.line1,
@@ -98,17 +112,10 @@ export async function verifyShopPayment(input: { orderId: string; paymentId: str
   if (!verifyCheckoutSignature(input.orderId, input.paymentId, input.signature)) {
     return { ok: false, error: "We couldn't verify that payment. If money was deducted it will be confirmed shortly." };
   }
-  const order = await prisma.order.findFirst({ where: { razorpayOrderId: input.orderId, userId: user.id }, include: { items: true } });
+  const order = await prisma.order.findFirst({ where: { razorpayOrderId: input.orderId, userId: user.id } });
   if (!order) return { ok: false, error: "Order not found." };
-  if (order.status === "PAID" || order.status === "FULFILLED") return { ok: true };
 
-  await prisma.$transaction([
-    prisma.order.update({ where: { id: order.id }, data: { status: "PAID", razorpayPaymentId: input.paymentId } }),
-    ...order.items
-      .filter((i) => i.shopItemId)
-      .map((i) => prisma.shopItem.updateMany({ where: { id: i.shopItemId!, stock: { not: null } }, data: { stock: { decrement: i.quantity } } })),
-  ]);
-
-  await notifyOrderPlaced(order.id);
+  // Idempotent: marks paid once, decrements stock, emails the customer + operator.
+  await confirmOrderPaid(order.id, input.paymentId);
   return { ok: true };
 }

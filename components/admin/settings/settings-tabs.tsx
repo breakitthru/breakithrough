@@ -8,6 +8,7 @@ const TABS = [
   { label: "Workspace & brand", href: "/admin/settings" },
   { label: "Design", href: "/admin/settings/design" },
   { label: "Notifications", href: "/admin/settings/notifications" },
+  { label: "Shop & delivery", href: "/admin/settings/shop" },
   { label: "Integrations", href: "/admin/settings/integrations" },
   { label: "Legal & policies", href: "/admin/settings/legal" },
   { label: "Data export", href: "/admin/settings/data" },
