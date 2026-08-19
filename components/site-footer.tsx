@@ -38,15 +38,15 @@ export function SiteFooter() {
   return (
     <footer
       className={cn(
-        "bg-[var(--color-brand-ink)] text-[0.8rem]",
+        "bg-[var(--color-brand-ink)] text-[0.75rem]",
         // Inside the member shell the bottom tab bar replaces the footer on
         // phones; on desktop the footer clears the fixed sidebar.
         inShell && "hidden lg:block lg:pl-[264px]",
       )}
     >
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-[1180px] flex-col gap-3 px-8 py-5 md:flex-row md:items-center md:justify-between">
-          <nav className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="mx-auto flex max-w-[1180px] flex-col gap-3 px-6 py-4 md:flex-row md:items-center md:justify-between md:gap-6">
+          <nav className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 md:flex-nowrap md:whitespace-nowrap">
             <Link href="/legal/terms" className={LINK}>Terms of Use</Link>
             <span className="text-white/20">|</span>
             <Link href="/legal/privacy" className={LINK}>Privacy Policy</Link>
@@ -61,8 +61,8 @@ export function SiteFooter() {
             <span className="text-white/20">|</span>
             <CookiePreferencesLink className={LINK} />
           </nav>
-          <p className="text-white/40">
-            © {year} Break It Thru, operated by Yash Goyal, Gurgaon, Haryana, India
+          <p className="text-white/40 md:whitespace-nowrap md:shrink-0">
+            © {year} Break It Thru · Yash Goyal, Gurgaon, Haryana
           </p>
         </div>
       </div>

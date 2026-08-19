@@ -14,7 +14,7 @@ export function DaylightDock() {
     <Link
       href="/daylight"
       aria-label="Daylight — AI companion"
-      className="fixed bottom-24 right-5 z-20 flex items-center gap-3 rounded-full bg-[var(--color-accent)] p-3 text-[var(--color-accent-fg)] shadow-[var(--shadow-float)] transition-transform hover:-translate-y-0.5 lg:bottom-6 lg:right-6 lg:gap-3 lg:rounded-[var(--radius-pill)] lg:border lg:border-[var(--color-line)] lg:bg-[var(--color-accent-subtle)] lg:py-2.5 lg:pl-2.5 lg:pr-5 lg:text-[var(--color-ink)]"
+      className="fixed bottom-24 right-5 z-20 flex items-center gap-3 rounded-full bg-[var(--color-accent)] p-3 text-[var(--color-accent-fg)] shadow-[var(--shadow-float)] transition-transform hover:-translate-y-0.5 lg:bottom-16 lg:right-6 lg:gap-3 lg:rounded-[var(--radius-pill)] lg:border lg:border-[var(--color-line)] lg:bg-[var(--color-accent-subtle)] lg:py-2.5 lg:pl-2.5 lg:pr-5 lg:text-[var(--color-ink)]"
     >
       <span className="flex h-10 w-10 items-center justify-center rounded-full lg:bg-[var(--color-accent)] lg:text-[var(--color-accent-fg)]">
         <ChatCircleDots size={22} weight="fill" />

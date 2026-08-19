@@ -115,7 +115,7 @@ export type DayView = {
   phaseName: string;
   title: string;
   isMilestone: boolean;
-  videos: { id: string; title: string; durationLabel: string }[];
+  videos: { id: string; title: string; durationLabel: string; streamUid: string | null }[];
   tasks: TaskView[];
   progress: { done: number; total: number; optionalDone: number };
 };
@@ -164,6 +164,7 @@ export async function getDayView(userId: string, dayNumber: number): Promise<Day
     videos: day.videos.map((v) => ({
       id: v.id,
       title: v.title,
+      streamUid: v.streamUid,
       durationLabel: v.durationSec
         ? `${Math.floor(v.durationSec / 60)}:${String(v.durationSec % 60).padStart(2, "0")}`
         : "0:00",

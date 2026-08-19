@@ -17,6 +17,7 @@ import { redirect } from "next/navigation";
 import { getConfig } from "@/lib/config";
 import { requireOnboardedUser } from "@/lib/session";
 import { getProgramState, getDayView } from "@/lib/program";
+import { streamIframeSrc } from "@/lib/cloudflare-stream";
 import { prisma } from "@/lib/prisma";
 
 function categoryLabel(c: string) {
@@ -129,15 +130,27 @@ export default async function DayPage({ params }: { params: Promise<{ day: strin
                     key={v.id}
                     className="group relative aspect-[16/9] overflow-hidden rounded-[var(--radius-md)] bg-[var(--color-brand-ink)]"
                   >
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 backdrop-blur transition-colors group-hover:bg-white/25">
-                        <Play size={18} weight="fill" className="text-white" />
-                      </span>
-                    </div>
-                    <div className="absolute inset-x-0 bottom-0 p-3.5">
-                      <p className="text-sm font-semibold text-white">{v.title}</p>
-                      <p className="text-xs text-white/60">{v.durationLabel}</p>
-                    </div>
+                    {v.streamUid ? (
+                      <iframe
+                        src={streamIframeSrc(v.streamUid)}
+                        className="absolute inset-0 h-full w-full"
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                        allowFullScreen
+                        title={v.title}
+                      />
+                    ) : (
+                      <>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 backdrop-blur">
+                            <Play size={18} weight="fill" className="text-white" />
+                          </span>
+                        </div>
+                        <div className="absolute inset-x-0 bottom-0 p-3.5">
+                          <p className="text-sm font-semibold text-white">{v.title}</p>
+                          <p className="text-xs text-white/60">Video coming soon</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
