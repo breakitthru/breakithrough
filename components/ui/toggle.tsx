@@ -34,12 +34,12 @@ export function Toggle({
       disabled={disabled}
       role="switch"
       aria-checked={on}
-      className="relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50"
+      className="inline-flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors disabled:opacity-50"
       style={{ backgroundColor: on ? "var(--color-brand)" : "var(--color-line-strong)" }}
     >
       <span
-        className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
-        style={{ transform: on ? "translateX(22px)" : "translateX(2px)" }}
+        className="h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
+        style={{ transform: on ? "translateX(20px)" : "translateX(0)" }}
       />
     </button>
   );
