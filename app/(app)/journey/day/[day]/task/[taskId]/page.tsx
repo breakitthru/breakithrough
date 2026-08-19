@@ -53,27 +53,29 @@ export default async function TaskPage({
         {task.title}
       </h1>
 
-      <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-[380px_minmax(0,1fr)]">
-        <div className="relative aspect-[9/16] w-full overflow-hidden rounded-[var(--radius-lg)] bg-[var(--color-brand-ink)]">
-          {task.videos[0]?.streamUid ? (
-            <iframe
-              src={streamIframeSrc(task.videos[0].streamUid)}
-              className="absolute inset-0 h-full w-full"
-              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-              allowFullScreen
-              title={task.videos[0].title}
-            />
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
-                <Play size={24} weight="fill" className="text-white" />
-              </span>
-              <p className="text-xs text-white/50">
-                {task.videos[0]?.title ?? "Video coming soon"}
-              </p>
-            </div>
-          )}
-        </div>
+      <div className="mt-8 space-y-8">
+        {task.hasVideo && (
+          <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-lg)] bg-[var(--color-brand-ink)]">
+            {task.videos[0]?.streamUid ? (
+              <iframe
+                src={streamIframeSrc(task.videos[0].streamUid)}
+                className="absolute inset-0 h-full w-full"
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                allowFullScreen
+                title={task.videos[0].title}
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
+                  <Play size={24} weight="fill" className="text-white" />
+                </span>
+                <p className="text-xs text-white/50">
+                  {task.videos[0]?.title ?? "Video coming soon"}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         <div>
           <h2 className="text-base font-semibold text-[var(--color-ink)]">Why this matters</h2>

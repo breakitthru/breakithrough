@@ -45,6 +45,7 @@ export default async function DayEditorPage({ params }: { params: Promise<{ n: s
           estimatedMinutes: t.estimatedMinutes,
           points: t.points,
           mandatory: t.mandatory,
+          hasVideo: t.hasVideo,
           whyItMatters: t.whyItMatters,
           videoCount: t._count.videos,
         }))}

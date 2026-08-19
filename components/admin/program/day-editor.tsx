@@ -31,6 +31,7 @@ export type TaskRow = {
   estimatedMinutes: number;
   points: number;
   mandatory: boolean;
+  hasVideo: boolean;
   whyItMatters: string | null;
   videoCount: number;
 };
@@ -43,6 +44,7 @@ const empty = {
   estimatedMinutes: 5,
   points: 1,
   mandatory: true,
+  hasVideo: true,
   whyItMatters: "",
 };
 
@@ -95,6 +97,7 @@ export function DayEditor({
       estimatedMinutes: t.estimatedMinutes,
       points: t.points,
       mandatory: t.mandatory,
+      hasVideo: t.hasVideo,
       whyItMatters: t.whyItMatters ?? "",
     });
     setError(null);
@@ -271,6 +274,13 @@ export function DayEditor({
         <div className="mb-4 flex items-center justify-between">
           <span className="text-sm text-[var(--color-ink)]">Mandatory</span>
           <Toggle checked={form.mandatory} onChange={(v) => setForm({ ...form, mandatory: v })} />
+        </div>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <span className="text-sm text-[var(--color-ink)]">Has a video</span>
+            <p className="text-xs text-[var(--color-ink-faint)]">Off = members see no video, just the notes and steps.</p>
+          </div>
+          <Toggle checked={form.hasVideo} onChange={(v) => setForm({ ...form, hasVideo: v })} />
         </div>
         <Field label="Why it matters (optional)">
           <textarea rows={3} className={inputClass} value={form.whyItMatters} onChange={(e) => setForm({ ...form, whyItMatters: e.target.value })} />

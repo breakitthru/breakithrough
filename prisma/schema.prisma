@@ -203,6 +203,7 @@ model Task {
   points           Int          @default(1) // per-task, configurable
   mandatory        Boolean      @default(true)
   responseType     ResponseType @default(NONE)
+  hasVideo         Boolean      @default(true) // whether this task shows a video slot
 
   videos      Video[]
   completions TaskCompletion[]

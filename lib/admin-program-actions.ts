@@ -32,6 +32,7 @@ const taskSchema = z.object({
   estimatedMinutes: z.coerce.number().int().min(0).max(240),
   points: z.coerce.number().int().min(0).max(50),
   mandatory: z.coerce.boolean(),
+  hasVideo: z.coerce.boolean(),
   whyItMatters: z.string().trim().max(1000).optional().nullable(),
 });
 
@@ -43,6 +44,7 @@ export type TaskInput = {
   estimatedMinutes: number | string;
   points: number | string;
   mandatory: boolean;
+  hasVideo: boolean;
   whyItMatters?: string | null;
 };
 export type VideoInput = {
