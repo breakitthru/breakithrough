@@ -84,6 +84,7 @@ model User {
   badges        UserBadge[]
   reflections   Reflection[]
   moods         MoodLog[]
+  moodEntries   MoodEntry[]
   consent       Consent?
   sosEvents     SosEvent[]
   redemptions   Redemption[]
@@ -318,6 +319,25 @@ model MoodLog {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, dayNumber])
+  @@index([userId])
+}
+
+// Detailed self-tracking (Mood & Anxiety chart). One entry per calendar date.
+// Private to the member — like reflections, this is never surfaced in admin.
+model MoodEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String // YYYY-MM-DD (the tracker is keyed by calendar day)
+  mood      Int // -5..5
+  intensity Int // 0..5 (anxiety intensity)
+  frequency Int // 0..5 (anxiety frequency)
+  triggers  String[] @default([])
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
   @@index([userId])
 }
 

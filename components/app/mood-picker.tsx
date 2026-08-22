@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { SmileySad, SmileyMeh, Smiley, SmileyWink } from "@phosphor-icons/react";
+import { SmileySad, SmileyMeh, Smiley, SmileyWink, ChartLineUp } from "@phosphor-icons/react";
 import { Card } from "@/components/ui/card";
 import { saveMood } from "@/lib/actions";
 
@@ -77,6 +77,22 @@ export function MoodPicker({ initial }: { initial: number | null }) {
           </Link>
         </p>
       )}
+
+      <Link
+        href="/mood-tracker"
+        className="mt-5 flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface-sunken)] px-4 py-3 transition-colors hover:border-[var(--color-accent)]"
+      >
+        <span className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent-subtle)] text-[var(--color-accent)]">
+            <ChartLineUp size={18} weight="fill" />
+          </span>
+          <span>
+            <span className="block text-sm font-semibold text-[var(--color-ink)]">Mood &amp; anxiety tracker</span>
+            <span className="block text-xs text-[var(--color-ink-muted)]">Log details, see your patterns and triggers</span>
+          </span>
+        </span>
+        <span className="text-sm font-medium text-[var(--color-brand)]">Open</span>
+      </Link>
     </Card>
   );
 }
