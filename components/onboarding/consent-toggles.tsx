@@ -17,17 +17,16 @@ const ITEMS: { key: Key; label: string; sub?: string; defaultOn: boolean }[] = [
 function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       role="switch"
       aria-checked={on}
-      className={`relative h-6 w-11 rounded-full transition-colors ${
-        on ? "bg-[var(--color-brand)]" : "bg-[var(--color-line-strong)]"
-      }`}
+      className="inline-flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors"
+      style={{ backgroundColor: on ? "var(--color-brand)" : "var(--color-line-strong)" }}
     >
       <span
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-          on ? "translate-x-[22px]" : "translate-x-0.5"
-        }`}
+        className="h-5 w-5 rounded-full bg-white shadow-sm transition-transform"
+        style={{ transform: on ? "translateX(20px)" : "translateX(0)" }}
       />
     </button>
   );

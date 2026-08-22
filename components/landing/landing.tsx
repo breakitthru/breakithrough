@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -25,6 +27,29 @@ import { cn } from "@/lib/utils";
 const SHELL = "mx-auto w-full max-w-[1180px] px-6";
 
 /* eslint-disable @next/next/no-img-element */
+
+/*
+  Phone mockups are inlined (not loaded via <img src>). The SVGs contain
+  drop-shadow filters, and filtered SVGs loaded through <img> are rasterized at
+  1x on high-DPI screens — that's what made them look blurry on phones/retina.
+  Inlining renders them as live vector at the device's full resolution. Read
+  once at render (server component); the three files use unique id suffixes so
+  their filter/clip ids don't collide in the shared DOM.
+*/
+function PhoneMockup({ file, label }: { file: string; label: string }) {
+  let svg = readFileSync(join(process.cwd(), "public", "landing", file), "utf8");
+  // Drop the fixed pixel size so the CSS (max-w) drives the size and the viewBox
+  // keeps it perfectly scalable.
+  svg = svg.replace(/(<svg\b[^>]*?)\swidth="\d+"\s+height="\d+"/, '$1 width="100%" height="auto"');
+  return (
+    <div
+      role="img"
+      aria-label={label}
+      className="mx-auto w-full max-w-[340px] [&>svg]:h-auto [&>svg]:w-full"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
+}
 
 const PHASES = [
   { n: 1, name: "Steady breath", days: "Days 1–8", body: "Eight mornings learning to steady your breath. Grounding, body scans, and naming what you feel before it names you." },
@@ -124,7 +149,7 @@ export function Landing() {
           </p>
         </div>
         <div className="order-1 lg:order-2">
-          <img src="/landing/hero.svg" alt="The Break It Thru app on a phone" className="mx-auto w-full max-w-[340px]" />
+          <PhoneMockup file="hero.svg" label="The Break It Thru app on a phone" />
         </div>
       </section>
 
@@ -165,7 +190,7 @@ export function Landing() {
       <section id="inside" className="bg-[var(--color-surface)]/60 py-20 lg:py-28">
         <div className={cn(SHELL, "grid items-center gap-12 lg:grid-cols-2")}>
           <div className="order-2 lg:order-1">
-            <img src="/landing/day.svg" alt="A day inside the program" className="mx-auto w-full max-w-[340px]" />
+            <PhoneMockup file="day.svg" label="A day inside the program" />
           </div>
           <div className="order-1 lg:order-2">
             <Eyebrow>What a day looks like</Eyebrow>
@@ -236,7 +261,7 @@ export function Landing() {
       <section className="bg-[var(--color-brand-ink)] py-20 text-[var(--color-brand-fg)] lg:py-28">
         <div className={cn(SHELL, "grid items-center gap-12 lg:grid-cols-2")}>
           <div>
-            <img src="/landing/sos.svg" alt="The SOS space" className="mx-auto w-full max-w-[340px]" />
+            <PhoneMockup file="sos.svg" label="The SOS space" />
           </div>
           <div>
             <Eyebrow>If tonight is bad</Eyebrow>

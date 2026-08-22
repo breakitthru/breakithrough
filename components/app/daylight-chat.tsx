@@ -28,11 +28,16 @@ export function DaylightChat({ history, configured }: { history: ChatMsg[]; conf
     setInput("");
     setMessages((m) => [...m, { role: "USER", content: trimmed }]);
     start(async () => {
-      const res = await sendDaylightMessage(trimmed);
-      if (res.ok) {
-        setMessages((m) => [...m, { role: "ASSISTANT", content: res.reply }]);
-      } else {
-        setError(res.error);
+      try {
+        const res = await sendDaylightMessage(trimmed);
+        if (res.ok) {
+          setMessages((m) => [...m, { role: "ASSISTANT", content: res.reply }]);
+        } else {
+          setError(res.error);
+        }
+      } catch {
+        // Never let a failed request bubble up and crash the page.
+        setError("Daylight is unavailable right now. Please try again in a moment.");
       }
     });
   };
