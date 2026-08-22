@@ -178,6 +178,13 @@ export function MoodTracker({ initialEntries }: { initialEntries: MoodEntry[] })
           <p className="mt-1 max-w-xl text-sm text-[var(--color-ink-muted)]">
             Log how you felt each day, watch patterns emerge, and spot your triggers. Private to you.
           </p>
+          <p className="mt-2 text-xs text-[var(--color-ink-faint)]">
+            A self-tracking tool, not a substitute for care. If you feel unsafe,{" "}
+            <Link href="/sos" className="underline underline-offset-2 hover:text-[var(--color-ink)]">
+              reach the SOS space
+            </Link>
+            .
+          </p>
         </div>
       </div>
 
