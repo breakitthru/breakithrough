@@ -85,6 +85,41 @@ export function moodLabel(v: number): string {
   return MOOD_LEVELS.find((l) => l.v === v)?.label ?? String(v);
 }
 
+/*
+  A version of a value colour that stays legible as text/thin borders on a light
+  surface: pale colours (the 0/none end) are darkened toward ink while keeping
+  their hue; saturated colours pass through unchanged.
+*/
+export function readableColor(color: string): string {
+  const m = color.match(/(\d+)\D+(\d+)\D+(\d+)/);
+  if (!m) return color;
+  let r = Number(m[1]);
+  let g = Number(m[2]);
+  let b = Number(m[3]);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  if (brightness <= 150) return color;
+  const k = 0.5; // blend toward ink (#1c2a22)
+  r = Math.round(r + (28 - r) * k);
+  g = Math.round(g + (42 - g) * k);
+  b = Math.round(b + (34 - b) * k);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+/*
+  Readable text colour for a filled swatch. moodColor/anxColor span from very
+  pale (0/none) to saturated, so white text disappears on the light end — pick
+  dark ink there and white on darker fills (perceived-brightness threshold).
+*/
+export function textOn(color: string): string {
+  const m = color.match(/(\d+)\D+(\d+)\D+(\d+)/);
+  if (!m) return "#ffffff";
+  const r = Number(m[1]);
+  const g = Number(m[2]);
+  const b = Number(m[3]);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 150 ? "#1c2a22" : "#ffffff";
+}
+
 /** Local calendar date as YYYY-MM-DD (avoids UTC off-by-one from toISOString). */
 export function localDateStr(d = new Date()): string {
   const y = d.getFullYear();

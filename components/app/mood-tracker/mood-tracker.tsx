@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { PencilSimple, ChartLineUp, Rows, ArrowLeft } from "@phosphor-icons/react";
+import { PencilSimple, ChartLineUp, Rows, ArrowLeft, Check } from "@phosphor-icons/react";
 import Link from "next/link";
 import {
   MOOD_LEVELS,
@@ -15,6 +15,8 @@ import {
   moodColor,
   anxColor,
   moodLabel,
+  textOn,
+  readableColor,
   localDateStr,
   type MoodEntry,
 } from "@/lib/mood-tracker";
@@ -172,9 +174,28 @@ export function MoodTracker({ initialEntries }: { initialEntries: MoodEntry[] })
         >
           <ArrowLeft size={18} />
         </Link>
-        <div>
-          <p className="eyebrow">Personal tracking tool</p>
-          <h1 className="font-display text-3xl text-[var(--color-ink)]">Mood &amp; Anxiety</h1>
+        <div className="flex-1">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="eyebrow">Personal tracking tool</p>
+              <h1 className="font-display text-3xl text-[var(--color-ink)]">Mood &amp; Anxiety</h1>
+            </div>
+            {/* Signature: a drawn mood line, from low (cool) to lifting (clay). */}
+            <svg viewBox="0 0 180 56" className="hidden h-12 w-44 shrink-0 sm:block" fill="none" aria-hidden="true">
+              <path
+                d="M2 44 C 20 14, 34 14, 46 34 S 72 52, 86 28 S 112 6, 126 28 S 150 46, 178 18"
+                stroke="url(#moodWave)" strokeWidth="2.5" strokeLinecap="round"
+              />
+              <circle cx="178" cy="18" r="3.5" fill="var(--color-accent)" />
+              <defs>
+                <linearGradient id="moodWave" x1="0" y1="0" x2="180" y2="0">
+                  <stop offset="0%" stopColor="#5b7db1" />
+                  <stop offset="55%" stopColor="var(--color-brand)" />
+                  <stop offset="100%" stopColor="var(--color-accent)" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
           <p className="mt-1 max-w-xl text-sm text-[var(--color-ink-muted)]">
             Log how you felt each day, watch patterns emerge, and spot your triggers. Private to you.
           </p>
@@ -264,24 +285,38 @@ function Scale({
     <div className="flex flex-wrap gap-1.5">
       {levels.map((lv) => {
         const sel = value === lv.v;
+        const c = colorFn(lv.v);
+        const fg = sel ? textOn(c) : "var(--color-ink)";
         return (
           <button
             key={lv.v}
             type="button"
             onClick={() => onPick(lv.v)}
-            className="min-w-[62px] flex-1 rounded-lg border px-1.5 py-2 text-center text-[11px] transition-transform"
+            aria-pressed={sel}
+            className="group relative min-w-[60px] flex-1 overflow-hidden rounded-xl border px-1.5 pb-2 pt-2.5 text-center transition-all duration-150 hover:-translate-y-0.5"
             style={{
-              background: sel ? colorFn(lv.v) : "#fff",
+              background: sel ? c : "var(--color-surface)",
               borderColor: sel ? "transparent" : "var(--color-line)",
-              color: sel ? "#fff" : "var(--color-ink-muted)",
-              transform: sel ? "translateY(-2px)" : "none",
-              boxShadow: sel ? "0 6px 16px -6px rgba(0,0,0,.35)" : "none",
+              transform: sel ? "translateY(-2px)" : undefined,
+              boxShadow: sel ? `0 8px 18px -8px ${c}` : undefined,
             }}
           >
-            <span className="block text-sm font-bold" style={{ color: sel ? "#fff" : "var(--color-ink)" }}>
+            <span className="block font-display text-lg leading-none" style={{ color: fg }}>
               {lv.v}
             </span>
-            {lv.label}
+            <span
+              className="mt-1 block text-[10.5px] leading-tight"
+              style={{ color: sel ? fg : "var(--color-ink-muted)", opacity: sel ? 0.85 : 1 }}
+            >
+              {lv.label}
+            </span>
+            {/* value-colour spectrum cue along the bottom (hidden once filled) */}
+            {!sel && (
+              <span
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px]"
+                style={{ background: c, opacity: 0.85 }}
+              />
+            )}
           </button>
         );
       })}
@@ -335,7 +370,7 @@ function LogPanel({
   return (
     <div className="mt-6 grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
       {/* Entry form */}
-      <div className="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6">
+      <TrackerCard className="p-6">
         <h2 className="font-display text-xl text-[var(--color-ink)]">Log an entry</h2>
         <p className="mt-0.5 text-sm text-[var(--color-ink-muted)]">Pick the date, then rate how you felt.</p>
 
@@ -442,42 +477,69 @@ function LogPanel({
               Delete this day
             </button>
           )}
-          {saved && <span className="text-sm text-[var(--color-brand-ink)]">Saved</span>}
+          {saved && (
+            <span className="flex items-center gap-1 text-sm font-medium text-[var(--color-brand-ink)]">
+              <Check size={15} weight="bold" /> Saved
+            </span>
+          )}
         </div>
-      </div>
+      </TrackerCard>
 
-      {/* Reference + snapshot */}
-      <div className="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6">
-        <h2 className="font-display text-xl text-[var(--color-ink)]">Scale reference</h2>
-        <div className="mt-3 space-y-3 text-[12.5px] leading-relaxed text-[var(--color-ink-muted)]">
-          <p>
-            <strong className="text-[var(--color-ink)]">Mood:</strong> 5 Euphoric · 4 Excited · 3 Very Good · 2 Good · 1 Fair · 0 Neutral · −1 Not good · −2 Sad · −3 Very sad · −4 Melancholic · −5 Suicidal
-          </p>
-          <p>
-            <strong className="text-[var(--color-ink)]">Anxiety intensity:</strong> 0 None · 1 Mild · 2 Moderate · 3 Severe · 4 Extreme · 5 Dissociation
-          </p>
-          <p>
-            <strong className="text-[var(--color-ink)]">Anxiety frequency:</strong> 0 None · 1 Sometimes · 2 Half the time · 3 &gt; half the time · 4 All the time · 5 Episodes/day
-          </p>
-        </div>
+      {/* Live preview + trend + reference */}
+      <div className="flex flex-col gap-5">
+        <TrackerCard className="p-6">
+          <p className="eyebrow">Right now</p>
+          <p className="mt-0.5 text-sm text-[var(--color-ink-muted)]">Updates as you choose.</p>
+          <div className="mt-4 grid grid-cols-3 gap-2.5">
+            {[
+              { l: "Mood", v: draft.mood, c: draft.mood !== null ? moodColor(draft.mood) : null },
+              { l: "Intensity", v: draft.intensity, c: draft.intensity !== null ? anxColor(draft.intensity) : null },
+              { l: "Frequency", v: draft.frequency, c: draft.frequency !== null ? anxColor(draft.frequency) : null },
+            ].map((s) => (
+              <div
+                key={s.l}
+                className="rounded-xl border p-3 text-center transition-colors"
+                style={{
+                  borderColor: s.c ?? "var(--color-line)",
+                  borderWidth: s.c ? 2 : 1,
+                  background: s.c ? "var(--color-surface)" : "var(--color-surface-sunken)",
+                }}
+              >
+                <div className="font-display text-3xl leading-none" style={{ color: s.c ? readableColor(s.c) : "var(--color-ink-faint)" }}>
+                  {s.v ?? "—"}
+                </div>
+                <div className="mt-1.5 text-[10px] uppercase tracking-wide text-[var(--color-ink-muted)]">{s.l}</div>
+              </div>
+            ))}
+          </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-2.5">
-          {[
-            { l: "Mood", v: draft.mood, c: draft.mood !== null ? moodColor(draft.mood) : "#8a8f82" },
-            { l: "Intensity", v: draft.intensity, c: draft.intensity !== null ? anxColor(draft.intensity) : "#8a8f82" },
-            { l: "Frequency", v: draft.frequency, c: draft.frequency !== null ? anxColor(draft.frequency) : "#8a8f82" },
-          ].map((s) => (
-            <div key={s.l} className="rounded-xl border border-[var(--color-line)] bg-white p-3 text-center">
-              <div className="font-display text-2xl" style={{ color: s.c }}>{s.v ?? "—"}</div>
-              <div className="mt-1 text-[10px] uppercase tracking-wide text-[var(--color-ink-muted)]">{s.l}</div>
+          <div className="mt-6 border-t border-[var(--color-line)] pt-5">
+            <div className="flex items-baseline justify-between">
+              <h3 className="font-display text-base text-[var(--color-ink)]">14-day mood trend</h3>
+              <span className="text-[11px] text-[var(--color-ink-faint)]">full charts on Dashboard</span>
             </div>
-          ))}
-        </div>
+            <div className="mt-2">
+              <Sparkline values={spark} min={MOOD_MIN} max={MOOD_MAX} />
+            </div>
+          </div>
+        </TrackerCard>
 
-        <div className="mt-6">
-          <h3 className="font-display text-base text-[var(--color-ink)]">14-day trend</h3>
-          <p className="mb-2 text-xs text-[var(--color-ink-muted)]">A quick look — full charts live on the Dashboard tab.</p>
-          <Sparkline values={spark} min={MOOD_MIN} max={MOOD_MAX} />
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface-sunken)]/60 p-5">
+          <h3 className="font-display text-base text-[var(--color-ink)]">Scale reference</h3>
+          <dl className="mt-3 space-y-3 text-[12.5px] leading-relaxed">
+            <div>
+              <dt className="font-semibold text-[var(--color-ink)]">Mood</dt>
+              <dd className="text-[var(--color-ink-muted)]">5 Euphoric · 4 Excited · 3 Very Good · 2 Good · 1 Fair · 0 Neutral · −1 Not good · −2 Sad · −3 Very sad · −4 Melancholic · −5 Suicidal</dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-[var(--color-ink)]">Anxiety intensity</dt>
+              <dd className="text-[var(--color-ink-muted)]">0 None · 1 Mild · 2 Moderate · 3 Severe · 4 Extreme · 5 Dissociation</dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-[var(--color-ink)]">Anxiety frequency</dt>
+              <dd className="text-[var(--color-ink-muted)]">0 None · 1 Sometimes · 2 Half the time · 3 &gt; half the time · 4 All the time · 5 Episodes/day</dd>
+            </div>
+          </dl>
         </div>
       </div>
     </div>
@@ -521,7 +583,7 @@ function DashboardPanel({
   const distItems = MOOD_LEVELS.map((l) => ({
     label: String(l.v),
     value: moodValues.filter((v) => v === l.v).length,
-    color: moodColor(l.v),
+    color: readableColor(moodColor(l.v)),
   }));
 
   const stats = [
@@ -588,13 +650,26 @@ function DashboardPanel({
   );
 }
 
+/* Shared card with the brand evergreen→clay accent bar along the top. */
+function TrackerCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[0_1px_2px_rgba(28,42,34,0.04),0_10px_28px_-14px_rgba(28,42,34,0.12)] ${className}`}>
+      <span
+        className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
+        style={{ background: "linear-gradient(90deg, var(--color-brand), var(--color-accent))" }}
+      />
+      {children}
+    </div>
+  );
+}
+
 function ChartCard({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5">
+    <TrackerCard className="p-5">
       <h2 className="font-display text-lg text-[var(--color-ink)]">{title}</h2>
       {hint && <p className="mb-3 text-xs text-[var(--color-ink-muted)]">{hint}</p>}
       <div className={hint ? "" : "mt-3"}>{children}</div>
-    </div>
+    </TrackerCard>
   );
 }
 
@@ -664,8 +739,8 @@ function Pill({ value, color, title }: { value: number; color: string; title?: s
   return (
     <span
       title={title}
-      className="inline-block min-w-[22px] rounded-full px-2 py-0.5 text-center text-[11px] font-bold text-white"
-      style={{ background: color }}
+      className="inline-block min-w-[22px] rounded-full px-2 py-0.5 text-center text-[11px] font-bold"
+      style={{ background: color, color: textOn(color) }}
     >
       {value}
     </span>
