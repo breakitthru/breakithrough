@@ -77,23 +77,27 @@ export default async function TaskPage({
           </div>
         )}
 
-        <div>
-          <h2 className="text-base font-semibold text-[var(--color-ink)]">Why this matters</h2>
-          <p className="mt-2 text-[var(--color-ink-muted)]">
-            {task.whyItMatters ?? "The clinician's note for this task goes here."}
-          </p>
+        {(task.whyItMatters?.trim() || task.steps.length > 0) && (
+          <div>
+            {task.whyItMatters?.trim() && (
+              <>
+                <h2 className="text-base font-semibold text-[var(--color-ink)]">Why this matters</h2>
+                <p className="mt-2 text-[var(--color-ink-muted)]">{task.whyItMatters}</p>
+              </>
+            )}
 
-          {task.steps.length > 0 && (
-            <>
-              <h2 className="mt-6 text-base font-semibold text-[var(--color-ink)]">Steps</h2>
-              <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[var(--color-ink-muted)]">
-                {task.steps.map((step, i) => (
-                  <li key={i}>{step}</li>
-                ))}
-              </ol>
-            </>
-          )}
-        </div>
+            {task.steps.length > 0 && (
+              <>
+                <h2 className={`text-base font-semibold text-[var(--color-ink)] ${task.whyItMatters?.trim() ? "mt-6" : ""}`}>Steps</h2>
+                <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[var(--color-ink-muted)]">
+                  {task.steps.map((step, i) => (
+                    <li key={i}>{step}</li>
+                  ))}
+                </ol>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <TaskComplete
